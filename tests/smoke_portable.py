@@ -34,6 +34,8 @@ cli = app / 'project-infra.exe'
 assert run([cli, '--version']).strip() == __version__
 run([cli, 'init'])
 run([cli, 'validate'])
+assert (project / 'knowledge/index.md').is_file()
+assert (project / 'shared/README.md').is_file()
 assert json.loads(run([cli, 'list', '--json'])) == []
 for path in project.rglob('*.md'):
     assert str(Path.home()) not in path.read_text(encoding='utf-8'), path
@@ -78,6 +80,12 @@ try:
         browser_test = Path(__file__).with_name('browser_portable.cjs')
         subprocess.run([shutil.which('node'), str(browser_test), url, str(base / 'portable-ui.png')],
                        env=browser_env, check=True, timeout=30)
+    plan = run([cli, '--root', project, 'new', 'plan', '--title', 'Packaged review test fixture'], cwd=project).strip()
+    handoff = run([cli, '--root', project, 'review', plan, '--prepare'], cwd=project).strip()
+    note = project / handoff / 'NOTE.md'
+    note.write_text('Reviewer: packaged test fixture, not a real review\n\n## 已核查\nCLI packaging check only.\n\n## 主要疑点\nDoes not establish production method validity.\n', encoding='utf-8')
+    run([cli, '--root', project, 'review', plan, '--record', str(note.relative_to(project))], cwd=project)
+    assert 'packaged test fixture' in (project / '.project/plans' / (plan + '.md')).read_text(encoding='utf-8')
 finally:
     server.terminate()
     server.wait(timeout=10)
