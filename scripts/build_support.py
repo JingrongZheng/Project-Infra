@@ -11,5 +11,8 @@ def source_digest(root):
     digest = hashlib.sha256()
     for path in sorted(files):
         digest.update(path.relative_to(root).as_posix().encode())
-        digest.update(path.read_bytes())
+        content = path.read_bytes()
+        if path.suffix not in ('.png', '.ico'):
+            content = content.replace(b'\r\n', b'\n')
+        digest.update(content)
     return digest.hexdigest()
