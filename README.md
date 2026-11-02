@@ -4,9 +4,80 @@
 
 **把设计主线、探索分支和实验依据留在项目里，让人与没有聊天背景的 Agent 都能接手工作。**
 
-Project Infra 是一个面向探索型开发、研究项目和 Vibe Coding 的本地项目工作台。Markdown / TOML 文件保存项目记录，界面从文件自动生成可编辑看板。Agent 主要编辑项目文件，人可以通过图形查看脉络、修改内容和状态，两边维护同一份信息。
+Project Infra 是一套面向探索型开发、研究项目和 Vibe Coding 的项目基础设施：让项目自己保存当前设计、探索依据、长期知识与共享实现，支持零背景 Agent 接手，以及低频独立质疑。Markdown / TOML 和源码文件是记录本体，可视化看板只是它们的可编辑投影。
 
-[下载安装包](https://github.com/JingrongZheng/Project-Infra/releases/latest) · [安装说明](docs/install-wizard.md) · [开发与构建](docs/development.md) · [MIT 许可](LICENSE)
+[下载安装包](https://github.com/JingrongZheng/Project-Infra/releases/latest) · [安装说明](docs/install-wizard.md) · [开发与构建](docs/development.md) · [变更日志](CHANGELOG.md) · [MIT 许可](LICENSE)
+
+## 先理解设计，而不是先看界面
+
+这套系统要保存的是：**现在采用什么、为什么这样做、哪些尝试已经失败、哪些能力可以直接复用，以及收口前还有什么疑点。**
+
+| 内容 | 职责与存放位置 |
+|---|---|
+| 当前设计主干 | `PROJECT.md`：正式采用的总体设计、边界和采用依据 |
+| 探索组织 | Plan：问题、范围、实验脉络、停止条件和综合判断 |
+| 具体尝试 | Experiment：前序、实现入口、实际结果、单次结论和证据 |
+| 长期知识 | `knowledge/`：提炼后的可复用结论、负面发现与适用边界，链接来源实验 |
+| 共享实现 | `shared/` 或项目已有 `src/` 包：真实代码和工具文件，独立于实验生命周期 |
+| 共享实现索引 | `TOOLKIT.md`：模块位置、导入方式、运行入口；不代替真实代码 |
+| 外部资料 | `library/`：论文、手册、链接；资料收录不意味着结论已被项目采用 |
+| 临时现场 | `.work/`：交接、缓存、临时检查；不充当长期知识层 |
+
+```mermaid
+flowchart TD
+    D[当前设计主干] --> P[Plan 组织探索]
+    P --> E[Experiment 尝试与证据]
+    S[独立共享代码和工具] --> E
+    L[外部论文与手册] --> E
+    E --> K[提炼长期知识与边界]
+    K --> D
+    E --> R[收口检查点：独立质疑者]
+    R -->|发现问题| E
+    R -->|留下核查与疑点| P
+    P -->|明确采用后| D
+```
+
+### 长期结论不会只埋在实验里
+
+Experiment 保留当时做了什么、观察到什么、为什么继续或放弃。跨实验仍有价值的认识应提炼成 `knowledge/` 文档：写清结论与适用边界，保留来源实验、证据或重跑入口。负面结论也可以沉淀；不是把全部实验日志复制一遍。
+
+`knowledge/index.md` 负责导航，`PROJECT.md` 引用与当前设计有关的知识。上下文默认读索引，只展开目标 Plan 的 `project_docs_updated`、Experiment 的 `artifacts_promoted` 明确关联的知识文件。没有增加 Knowledge 对象状态机或单独的历史层。
+
+### 共享代码属于项目，不属于某次 Experiment
+
+共享逻辑从实验里抽出，进入项目级模块；实验只组织输入、参数、调用和产物。共享模块不能反向依赖某个实验目录，清理实验也不应删除共享能力。
+
+仓库中的实际示例：
+
+```text
+examples/document-qa/
+├── shared/documents.py        文档读取、范围过滤与引用核查
+├── experiments/exp_0002.py    导入共享模块检查范围
+├── experiments/exp_0004.py    导入同一模块检查引用
+└── knowledge/document-scope.md  可复用边界、来源和重跑入口
+```
+
+两个实验都通过 `from shared.documents import ...` 正常导入，不需要从另一个实验目录找工具，也不修改 `sys.path`。
+空项目只生成共享目录和指引，不凭空生成业务代码；已有 `src/` 或安装包时优先复用既有源码结构，不强制再造一个 `shared` 实现。
+
+### 质疑者低频介入，只审查，不替执行者解决项目
+
+质疑者在一条探索分支准备收口时才出现。它应是未参与本次方案提出与业务实现的独立 subagent，阅读设计、知识、实验脉络、已有 note 和真实代码，选择适用检查：端到端运行、负例、数据泄露、评价污染、绕过测试或假完成等。
+
+v0.2.0 提供可执行的交接流程：
+
+```sh
+project-infra review PLAN-0001 --prepare
+# 输出 .work/reviews/PLAN-0001/<本次目录>/
+# 宿主把 context.md 交给独立 subagent，审查者写 NOTE.md
+project-infra review PLAN-0001 --record .work/reviews/PLAN-0001/<本次目录>/NOTE.md
+```
+
+准备动作不会生成“审查通过”；导入要求实际填写审查者、已核查内容和主要疑点，拒绝空模板、错误目标以及准备后源内容发生变化的交接。note 写回原 Plan / Experiment 的 Review，已有看板会按需显示审查节点，不新增工作对象或状态。
+
+**实现边界需要明确：** 本工具不自动启动模型，也不能仅凭文字核实审查者身份或证明它确实独立。独立会话和读写权限由宿主 Agent 环境提供：业务源码、知识与项目记录只读，交接目录允许写 note 和临时检查产物。源码变化检测是导入校验，不能替代权限隔离。导入 note 不自动采纳设计或关闭对象。
+
+实际角色指引见 [reviewer.md](docs/reviewer.md)。普通自检、用户验收和独立审查分开记录。
 
 ## 功能演示
 
@@ -44,7 +115,7 @@ Plan 只有进行中、暂停、已结束三个状态，各列独立滚动。尚
 
 ### Windows 安装版
 
-1. 在 [Releases](https://github.com/JingrongZheng/Project-Infra/releases/latest) 下载 `ProjectInfra-0.1.0-Setup.exe`。
+1. 在 [Releases](https://github.com/JingrongZheng/Project-Infra/releases/latest) 下载 `ProjectInfra-0.2.0-Setup.exe`。
 2. 按中文向导选择安装位置，保留“创建桌面快捷方式”。
 3. 双击桌面的 Project Infra，选择已有项目或一个空文件夹。
 4. 空目录经确认后生成项目骨架，看板自动在系统默认浏览器中打开。
@@ -57,23 +128,27 @@ Plan 只有进行中、暂停、已结束三个状态，各列独立滚动。尚
 
 ### Windows 便携版
 
-下载 `project-infra-0.1.0-windows-portable.zip`，解压后双击 `ProjectInfra.exe`。移动时携带整个文件夹，包括 `_internal`。见 [便携说明](docs/portable-use.md)。
+下载 `project-infra-0.2.0-windows-portable.zip`，解压后双击 `ProjectInfra.exe`。移动时携带整个文件夹，包括 `_internal`。见 [便携说明](docs/portable-use.md)。
 
 ## 项目内容放在哪里？
 
 ```text
 你的项目/
-├── AGENTS.md                    Agent 导航和接手入口
-├── PROJECT.md                   当前设计与设计主干
-├── TOOLKIT.md                   本项目共享代码和工具索引
+├── AGENTS.md                    导航和接手入口
+├── PROJECT.md                   当前采用的设计与主干
+├── knowledge/                   长期结论、边界及来源
+│   └── index.md                 知识导航
+├── shared/ 或已有 src/包         实际共享代码和工具
+├── experiments/                 导入共享代码的薄实验入口
+├── TOOLKIT.md                   共享模块位置与调用方式索引
 ├── .project/
-│   ├── plans/                   探索问题、范围、验收与综合判断
-│   └── experiments/             具体尝试、前序、结果与结论
+│   ├── plans/                   问题、范围、验收与综合判断
+│   └── experiments/             前序、结果、证据与单次结论
 ├── library/
-│   ├── index.toml               资料索引
+│   ├── index.toml               外部资料索引
 │   └── files/                   论文、手册等本地资料
-├── docs/                        审查和验证指引
-└── .work/                       临时现场与运行入口，不作为长期知识
+├── docs/                        审查与验证指引
+└── .work/                       临时现场，不作为长期知识
 ```
 
 代码、数据集与共享实现由项目自行组织。Experiment 的代码应保持输入、参数、共享调用和产物入口的薄层，可复用能力进入项目现有共享模块；TOOLKIT 只是文件索引，不是额外看板。
@@ -82,7 +157,7 @@ Plan 只有进行中、暂停、已结束三个状态，各列独立滚动。尚
 
 ## 零背景 Agent 如何接手？
 
-把项目目录和实际工作目标交给 Agent，让它先读 `AGENTS.md`，再沿设计主干、Plan 和 Experiment 按需深入。命令行 `context` 可汇集相关脉络和接续说明；未完成对象可用简短 `Continuation` 写清已完成内容、等待对象及继续条件。
+把项目目录和实际工作目标交给 Agent，让它先读 `AGENTS.md`，再沿设计主干、knowledge/index.md、共享代码索引以及 Plan / Experiment 按需深入。命令行 `context` 可汇集相关脉络和接续说明；未完成对象可用简短 `Continuation` 写清已完成内容、等待对象及继续条件。
 
 便携或安装版会在打开项目时更新 `.work/infra-runtime.md`，供 Agent 定位配套命令行入口。程序不自动调用模型；独立质疑者只在收口检查点按需介入，自动测试、用户验收与独立审查分开记录。
 

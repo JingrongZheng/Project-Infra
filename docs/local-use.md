@@ -5,11 +5,11 @@
 
 ## 安装一次
 
-解压 project-infra-0.1.0-local.zip。使用 PowerShell 在解压目录运行：
+解压 project-infra-0.2.0-local.zip。使用 PowerShell 在解压目录运行：
 
 ```powershell
 # 选择一个尚不存在的工具安装目录，和研究项目目录分开
-powershell -NoProfile -ExecutionPolicy Bypass -File .\install-local.ps1 -Destination "$env:LOCALAPPDATA\ProjectInfra-0.1.0"
+powershell -NoProfile -ExecutionPolicy Bypass -File .\install-local.ps1 -Destination "$env:LOCALAPPDATA\ProjectInfra-0.2.0"
 ```
 
 这里的 ExecutionPolicy Bypass 只作用于本次安装进程，不改全局设置。脚本只创建所选目录下的独立 Python 环境与命令入口，不修改 PATH 或系统 Python，也不下载依赖。若 python 未在 PATH 中，可追加 `-Python '你的python.exe完整路径'`。安装目录已存在时会停止，不覆盖已有环境。
@@ -19,7 +19,7 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .\install-local.ps1 -Destina
 ```powershell
 # 先进入你准备使用的新项目目录
 Set-Location '你的新项目目录'
-$infra = "$env:LOCALAPPDATA\ProjectInfra-0.1.0\project-infra.cmd"
+$infra = "$env:LOCALAPPDATA\ProjectInfra-0.2.0\project-infra.cmd"
 & $infra init
 & $infra validate
 & $infra serve --port 8765
@@ -46,7 +46,7 @@ $infra = "$env:LOCALAPPDATA\ProjectInfra-0.1.0\project-infra.cmd"
 
 ```powershell
 python -m venv '你的安装目录\.venv'
-& '你的安装目录\.venv\Scripts\python.exe' -m pip install --no-index --no-deps '.\project_infra-0.1.0-py3-none-any.whl'
+& '你的安装目录\.venv\Scripts\python.exe' -m pip install --no-index --no-deps '.\project_infra-0.2.0-py3-none-any.whl'
 & '你的安装目录\.venv\Scripts\project-infra.exe' --version
 ```
 

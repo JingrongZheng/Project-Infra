@@ -26,6 +26,8 @@ project-infra context PLAN-0001
 ```
 
 PROJECT.md 保存正式采用的设计主干；TOOLKIT.md 索引本项目实际共享代码，不复制工具自身源码。
+knowledge/ 保存跨实验可复用的结论与边界，并链接来源实验；shared/ 或已有源码包保存真实共享代码，experiments/ 只保留薄调用入口。两者都独立于某个 Experiment。
+需要收口审查时，使用 review <ID> --prepare 生成交接目录，由宿主启动独立 subagent 审查；填好 NOTE 后用 review <ID> --record <NOTE路径> 导入。程序不会自动运行模型或替宿主建立只读沙箱。
 验证入口见 docs/verification.md，质疑者指引见 docs/reviewer.md。
 未完成工作的停点写在对象 Continuation 中；.work 只存临时现场。
 

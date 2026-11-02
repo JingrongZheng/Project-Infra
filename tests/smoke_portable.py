@@ -47,7 +47,7 @@ cli = app / 'project-infra.exe'
 report = base / 'desktop-report.json'
 run([app / 'ProjectInfra.exe', '--check-ui', report], cwd=project)
 data = json.loads(report.read_text(encoding='utf-8'))
-assert data['visible'] and data['title'] == 'Project Infra'
+assert data['visible'] and data['title'] == 'Project Infra ' + __version__
 assert data['projects'] == [str(project.resolve())], data
 run([cli, 'validate'], cwd=project)
 with socket.socket() as sock:

@@ -196,12 +196,13 @@ class Service:
         knowledge_paths = set()
         for item in [doc] + [docs[key] for key in selected if key in docs]:
             for field in ('project_docs_updated', 'artifacts_promoted'):
-                for path in item.meta.get(field, []):
+                paths = item.meta.get(field, [])
+                for path in paths if isinstance(paths, list) else []:
                     if isinstance(path, str) and path.startswith('knowledge/') and path.endswith('.md'):
                         knowledge_paths.add(path)
         for path in sorted(knowledge_paths - {'knowledge/index.md'}):
             p = self.store.path(path)
-            if p.is_file():
+            if p.is_relative_to(self.store.path('knowledge')) and p.is_file():
                 chunks.append('# Knowledge: ' + path + '\n' + p.read_text(encoding='utf-8'))
         for ref in library(self.store):
             if ref['id'] in references:

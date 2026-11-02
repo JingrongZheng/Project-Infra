@@ -31,12 +31,12 @@ def prepare(service, ident):
     folder.mkdir(parents=True)
     (folder / 'context.md').write_text(context + '\n\n# 执行边界\n'
         '交给未参与本次方案与实现的独立 subagent；只审查，不提出替代实施方案或修改业务代码。\n'
-        '宿主应将项目源码、知识和记录设为只读，只允许写本目录 NOTE.md；这是宿主权限要求，本工具不声称已建立沙箱。\n'
+        '宿主应将项目源码、知识和记录设为只读，只允许写本交接目录的 NOTE.md 和 checks/ 临时检查产物；这是宿主权限要求，本工具不声称已建立沙箱。\n'
         '核查适用的真实运行路径、端到端检查、数据泄露与投机完成，短 note 写实际证据及未覆盖范围。\n'
         '自动测试不冒充独立审查，导入 note 不自动关闭对象或采纳设计。\n', encoding='utf-8')
     (folder / 'NOTE.md').write_text(NOTE, encoding='utf-8')
     (folder / 'manifest.json').write_text(json.dumps({'id': ident, 'root': str(service.store.root),
-        'fingerprint': fingerprint, 'allowed_write': 'NOTE.md'}, ensure_ascii=False, indent=2), encoding='utf-8')
+        'fingerprint': fingerprint, 'allowed_write': ['NOTE.md', 'checks/']}, ensure_ascii=False, indent=2), encoding='utf-8')
     return folder.relative_to(service.store.root).as_posix()
 
 

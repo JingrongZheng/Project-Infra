@@ -109,6 +109,8 @@ project-infra context PLAN-0001
 ```
 
 PROJECT.md 保存正式采用的设计主干；TOOLKIT.md 索引本项目实际共享代码，不复制工具自身源码。
+knowledge/ 保存跨实验可复用的结论与边界，并链接来源实验；shared/ 或已有源码包保存真实共享代码，experiments/ 只保留薄调用入口。两者都独立于某个 Experiment。
+需要收口审查时，使用 review <ID> --prepare 生成交接目录，由宿主启动独立 subagent 审查；填好 NOTE 后用 review <ID> --record <NOTE路径> 导入。程序不会自动运行模型或替宿主建立只读沙箱。
 验证入口见 docs/verification.md，质疑者指引见 docs/reviewer.md。
 未完成工作的停点写在对象 Continuation 中；.work 只存临时现场。
 
@@ -127,7 +129,7 @@ def initialize(store):
              'shared/README.md': '# 项目级共享实现\n\n此目录存放按能力命名的真实代码与工具文件，生命周期独立于 Experiment。若项目已有 src/ 或可安装包，优先在那里复用，不复制第二套实现。\nTOOLKIT.md 索引实际模块与调用方法；实验入口放 experiments/ 或现有实验目录，直接导入共享模块。不要让共享模块反向依赖某个实验目录。空项目没有业务实现，需要由项目按所用语言补入。\n',
              'experiments/README.md': '# 实验入口\n\n这里放输入、配置、共享调用与产物保存等薄入口；记录仍在 .project/experiments/。不要把整份项目实现复制到每次实验里。共享逻辑进入 shared/ 或现有源码包，再通过正常模块导入或项目构建调用。\n',
              'docs/verification.md': '# 验证入口\n\n在本项目填写现有运行环境、依赖定位、工作目录、验证命令和所需服务。机器专属路径不要当成其他机器的默认值。\n先定位已有依赖；默认导入失败不等于未安装，不自动安装或升级。\n区分断言失败、环境阻断与未执行；阻断不证明功能通过或没有缺陷。历史测试数量与验证方式不是新的验收要求，收口条件以当前对象为准。\n',
-             'TOOLKIT.md': '# 共享工具包\n\n写实验前先搜索并复用已有共享实现，在这里列出项目包、数据处理、评价、绘图及验证入口。\nExperiment 只保留输入、参数、共享调用与产物保存。通用逻辑进入按能力命名的共享模块，不在每个实验复制一份。\n清理实验不能删除被其他实验或项目代码使用的共享能力。\n',
+             'TOOLKIT.md': '# 共享代码与工具索引\n\n真实代码放在项目级 shared/ 或已有 src/包目录，本文件只记录模块路径和导入/调用方式。不要把共享实现留在某个 Experiment 下，也不要在这里用 Markdown 代替代码。\n写实验前先查已有的数据处理、评价、绘图和验证入口；实验只保留输入、参数、共享调用与产物保存。\n清理实验不能删除被其他实验或项目代码使用的共享能力。\n',
              'PROJECT.md': '+++\nmainline = []\n+++\n\n# 项目设计主干\n\n填写项目目标、当前总体方案、选择理由和未解决问题。\n',
              '.project/config.toml': 'schema_version = 2\n', 'library/index.toml': 'entry = []\n'}
     for kind, (prefix, folder) in KINDS.items():

@@ -1,11 +1,13 @@
 # Agent 入口
 
-先读 PROJECT.md 的设计主干和 TOOLKIT.md 的共享入口，再查看指定 Plan / Experiment 的脉络。
+先读 PROJECT.md、knowledge/index.md 和 TOOLKIT.md，再查看指定 Plan / Experiment 的脉络。看板只是这些项目文件的投影。
 
 | 需要什么 | 去哪里 |
 |---|---|
 | 当前方案、边界及理由 | PROJECT.md |
+| 已沉淀的长期知识、负面结论与适用边界 | knowledge/index.md 及其链接 |
 | 共享代码、已有能力与复用边界（写实验前先查） | TOOLKIT.md |
+| 实际共享实现 | shared/，或项目已有的 src/包目录；不属于任何 Experiment |
 | 探索问题及综合判断 | .project/plans/ |
 | 具体尝试及为什么继续或放弃 | .project/experiments/ |
 | 目标与验收要求 | .project/plans/ |
@@ -36,6 +38,8 @@ python -m project_infra verify EXP-0004
 节点摘要用普通语言说明做了什么、观察到什么；详细说明留在正文。
 Experiment 只保留输入、参数、共享调用与产物入口；可复用能力进入具名共享模块，不在每个实验复制实现。清理实验不删除共享能力。
 Experiment 保存单次结论，Plan 综合结果。只有明确采用后才更新主干来源。
+跨实验仍有价值的结论应提炼进 knowledge/，保留来源实验、证据或重跑入口与适用边界；不复制全部实验日志。当前设计写入 PROJECT.md 并引用相应知识。外部资料仍归 library/。
+共享代码应从实验中抽出，放到项目级 shared/ 或已有源码包；Experiment 只导入调用。TOOLKIT.md 只索引这些真实模块，不是代码容器。
 结论保留可核查的实际结果：单图、指标表、样例或文本均可，按需选择前后并排；不能编造检查、审查或实验结果。
 审查者只在交付点介入，不参与方案提出或业务代码编写。
 离开前把有效结论写回对象，未完成工作留下简短交接。不要依赖聊天记录。

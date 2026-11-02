@@ -2,6 +2,7 @@
 from pathlib import Path
 import argparse
 import sys
+import shutil
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from project_infra.bootstrap import initialize
@@ -97,6 +98,15 @@ update(closed, {'status': 'closed', 'resolution': 'abandoned', 'summary': '示�
 service.create('proposal', '后续考虑跨语言资料检索')
 store.path('library/files/demo-guide.md').write_text('# 示例资料说明\n\n本文件用于展示资料索引，内容不是外部论文或真实研究依据。\n', encoding='utf-8')
 store.path('library/index.toml').write_text('[[entry]]\nid = "REF-0001"\ntitle = "示例项目方法说明"\nkind = "manual"\nlocation = "files/demo-guide.md"\ntags = ["演示", "问答"]\n', encoding='utf-8')
+example = Path(__file__).resolve().parents[1] / 'examples/document-qa'
+for name in ['shared/__init__.py', 'shared/documents.py', 'experiments/__init__.py',
+             'experiments/exp_0002.py', 'experiments/exp_0004.py', 'data/demo-documents.json',
+             'knowledge/index.md', 'knowledge/document-scope.md', 'TOOLKIT.md']:
+    destination = store.path(name)
+    destination.parent.mkdir(parents=True, exist_ok=True)
+    shutil.copy2(example / name, destination)
+for ident, command in [('EXP-0002', 'python -m experiments.exp_0002'), ('EXP-0004', 'python -m experiments.exp_0004')]:
+    update(ident, {'run': command, 'artifacts_promoted': ['knowledge/document-scope.md']})
 errors = service.checked()[1]
 if errors:
     raise SystemExit('\n'.join(errors))

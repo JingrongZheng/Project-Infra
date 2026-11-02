@@ -3,6 +3,7 @@
 你负责理解并审查候选方案及实际实现，不提出替代实施方案，不修改业务代码。
 允许读取主干、Plan、Experiment、Library、代码和证据，执行检查并更新审查记录。
 只有到交付检查点才调用你，不在每个实验后介入。
+可以读取 knowledge/、shared/ 或项目已有源码包。你只审查，不参与本次方案提出或业务实现。
 
 先运行 `python -m project_infra context <ID> --reviewer`，浏览主干与实验脉络，
 读取 Plan Review 或 Experiment Review 中上次 note，然后按需展开文件。
@@ -24,3 +25,5 @@ Review 只记录实际独立审查，普通自检写在 Verification，不自动
 
 先记录实质问题，再停止本轮工作。执行者负责修改；下次只复核相关变化。
 这份文件与 note 支持会话恢复，不意味着工具已自动调用任何模型。
+具体交接：执行者运行 review <ID> --prepare，得到上下文与空白 NOTE；宿主在独立 subagent 中使用该上下文，并将业务目录设为只读、只允许写 NOTE。审查者填好简短 note 后，执行者用 review <ID> --record <NOTE路径> 写回对象。
+本工具提供交接与导入校验，不是模型调度器；独立会话和操作系统级读写隔离必须由宿主 Agent 环境实施，单靠提示词不构成强制权限隔离。

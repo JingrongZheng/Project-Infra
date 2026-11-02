@@ -14,6 +14,9 @@ project-infra --root '你的项目目录' serve --port 8765
 
 ## 程序结构
 
+软件版本只在 project_infra/__init__.py 的 __version__ 定义；Python 包动态读取它，构建脚本把同一版本写入 EXE 资源、安装器及文件名。不要覆盖旧版本 Release，使用独立 Git 分支、提交与版本标签。
+便携载荷包含 build-info.json 的版本和源码指纹；安装包构建会同时检查该指纹及实际 CLI --version，拒绝用旧载荷套上新版本号。构建过程中源码变化也会被拒绝。
+
 | 文件 | 职责 |
 |---|---|
 | project_infra/bootstrap.py | 新项目空白骨架与 Agent 导航模板 |
@@ -21,12 +24,16 @@ project-infra --root '你的项目目录' serve --port 8765
 | project_infra/store.py | 路径、写锁、版本冲突与事务恢复 |
 | project_infra/validation.py | 对象、前序关系、证据与设计主干校验 |
 | project_infra/service.py | CLI 和界面共用的业务入口与上下文 |
+| project_infra/review.py | 低频独立审查的上下文交接、空 note 和导入校验；不启动模型 |
 | project_infra/web.py | 仅监听本机的服务和文件投影 |
 | project_infra/desktop.py | 项目选择、自动端口、最近项目和服务生命周期 |
 | project_infra/static/graph-layout.js | 实验布局、文字避让与连接路由 |
 | project_infra/static/app.js | 看板、结果查看与表单编辑 |
 
 修改共享能力，不为示例数据手调节点坐标或另写一份实现。界面和 CLI 必须使用相同校验与存储入口。
+被管理项目的长期知识在 knowledge/，真实共享实现位于 shared/ 或已有源码包；TOOLKIT 只做调用索引。示例中的两个实验实际导入 shared.documents，可在示例根目录运行 python -m experiments.exp_0002 和 python -m experiments.exp_0004。知识通过 project_docs_updated / artifacts_promoted 显式关联到上下文，不整库加载。
+
+独立质疑者由宿主 Agent 环境创建并限制权限，本程序的 review --prepare/--record 只负责交接和记录一致性。可以验证 note 非空、目标匹配和准备后项目内容未变，不能仅凭文件证明审查者身份或实际独立性。不要把指引或内容指纹当成已实施的权限沙箱。
 
 ## 自动检查
 
@@ -62,7 +69,7 @@ node scripts/capture_demo.cjs
 安装/迁移回归：
 
 ```powershell
-python -X utf8 tests/smoke_portable.py dist/project-infra-0.1.0-windows-portable.zip
+python -X utf8 tests/smoke_portable.py dist/project-infra-0.2.0-windows-portable.zip
 python -X utf8 tests/smoke_installer.py 'Inno Setup目录/ISCC.exe'
 ```
 

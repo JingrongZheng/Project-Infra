@@ -8,6 +8,7 @@ import webbrowser
 from contextlib import contextmanager
 
 from .bootstrap import initialize
+from . import __version__
 from .service import Service
 from .store import Store
 from .web import make_server
@@ -118,7 +119,7 @@ def main(startup=True, on_ready=None):
     sessions = ProjectSessions()
     recent = load_recent(directory)
     root = tk.Tk()
-    root.title('Project Infra')
+    root.title('Project Infra ' + __version__)
     icon = Path(__file__).parent / 'assets/pi-monogram.ico'
     if sys.platform == 'win32' and icon.is_file():
         root.iconbitmap(str(icon))

@@ -6,6 +6,8 @@
 |---|---|
 | 产品目标、当前功能与使用流程 | README.md |
 | 模块结构、验证和构建 | docs/development.md |
+| 设计、知识、共享实现与质疑者的关系 | README.md 的设计章节；代码在 bootstrap.py、service.py、review.py |
+| 版本与升级边界 | project_infra.__version__、CHANGELOG.md |
 | 安装版及便携版操作 | docs/install-wizard.md、docs/portable-use.md |
 | 明确标注的演示项目 | examples/document-qa/ |
 | 许可与第三方资源 | LICENSE、THIRD_PARTY_NOTICES.md、licenses/ |
