@@ -136,7 +136,7 @@ class Service:
             raise ValueError('Unknown object ' + ident)
         doc = docs[ident]
         chunks = []
-        for path in ('AGENTS.md', 'PROJECT.md', 'TOOLKIT.md'):
+        for path in ('AGENTS.md', 'PROJECT.md', 'knowledge/index.md', 'TOOLKIT.md'):
             p = self.store.path(path)
             if p.exists():
                 chunks.append(f'# {path}\n' + self.store.read(path).body)
@@ -176,6 +176,10 @@ class Service:
                               f'File: {item.path}; status: {item.meta.get("status", "—")}')
                 if item.section('Continuation').strip():
                     chunks.append('Continuation: ' + item.section('Continuation'))
+                if reviewer:
+                    for section_name in ('Conclusion', 'Verification', 'Review'):
+                        if item.section(section_name).strip():
+                            chunks.append(section_name + ': ' + item.section(section_name))
                 if kind_of(item) == 'experiment' and item.meta.get('before'):
                     chunks.append('Before / After: ' + json.dumps(
                         list(zip(item.meta.get('before', []), item.meta.get('after', []))), ensure_ascii=False))
@@ -188,6 +192,17 @@ class Service:
                         if exp:
                             chunks.append(f'  {exp_id} <- {", ".join(exp.meta.get("predecessors", [])) or key}: '
                                           f'{exp.meta.get("title")}\n  {exp.meta.get("summary", "")}\n  File: {exp.path}')
+        # Follow only explicitly promoted knowledge, never load the entire knowledge tree.
+        knowledge_paths = set()
+        for item in [doc] + [docs[key] for key in selected if key in docs]:
+            for field in ('project_docs_updated', 'artifacts_promoted'):
+                for path in item.meta.get(field, []):
+                    if isinstance(path, str) and path.startswith('knowledge/') and path.endswith('.md'):
+                        knowledge_paths.add(path)
+        for path in sorted(knowledge_paths - {'knowledge/index.md'}):
+            p = self.store.path(path)
+            if p.is_file():
+                chunks.append('# Knowledge: ' + path + '\n' + p.read_text(encoding='utf-8'))
         for ref in library(self.store):
             if ref['id'] in references:
                 chunks.append('# Reference\n' + json.dumps(ref, ensure_ascii=False))

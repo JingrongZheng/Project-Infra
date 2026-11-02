@@ -4,12 +4,14 @@ from .documents import KINDS, template
 
 AGENTS = '''# Agent 入口
 
-先读 PROJECT.md 的设计主干和 TOOLKIT.md 的共享入口，再查看指定 Plan / Experiment 的脉络。
+先读 PROJECT.md、knowledge/index.md 和 TOOLKIT.md，再查看指定 Plan / Experiment 的脉络。看板只是这些项目文件的投影。
 
 | 需要什么 | 去哪里 |
 |---|---|
 | 当前方案、边界及理由 | PROJECT.md |
+| 已沉淀的长期知识、负面结论与适用边界 | knowledge/index.md 及其链接 |
 | 共享代码、已有能力与复用边界（写实验前先查） | TOOLKIT.md |
+| 实际共享实现 | shared/，或项目已有的 src/包目录；不属于任何 Experiment |
 | 探索问题及综合判断 | .project/plans/ |
 | 具体尝试及为什么继续或放弃 | .project/experiments/ |
 | 目标与验收要求 | .project/plans/ |\n| 验证命令、指标图表与其他结果展示 | .project/experiments/ |
@@ -39,6 +41,8 @@ python -m project_infra verify EXP-0004
 节点摘要用普通语言说明做了什么、观察到什么；详细说明留在正文。
 Experiment 只保留输入、参数、共享调用与产物入口；可复用能力进入具名共享模块，不在每个实验复制实现。清理实验不删除共享能力。
 Experiment 保存单次结论，Plan 综合结果。只有明确采用后才更新主干来源。
+跨实验仍有价值的结论应提炼进 knowledge/，保留来源实验、证据或重跑入口与适用边界；不复制全部实验日志。当前设计写入 PROJECT.md 并引用相应知识。外部资料仍归 library/。
+共享代码应从实验中抽出，放到项目级 shared/ 或已有源码包；Experiment 只导入调用。TOOLKIT.md 只索引这些真实模块，不是代码容器。
 结论保留可核查的实际结果：单图、指标表、样例或文本均可，按需选择前后并排；不能编造检查、审查或实验结果。
 审查者只在交付点介入，不参与方案提出或业务代码编写。
 离开前把有效结论写回对象，未完成工作留下简短交接。不要依赖聊天记录。
@@ -51,6 +55,7 @@ REVIEWER = '''# 质疑者初始化
 你负责理解并审查候选方案及实际实现，不提出替代实施方案，不修改业务代码。
 允许读取主干、Plan、Experiment、Library、代码和证据，执行检查并更新审查记录。
 只有到交付检查点才调用你，不在每个实验后介入。
+可以读取 knowledge/、shared/ 或项目已有源码包。你只审查，不参与本次方案提出或业务实现。
 
 先运行 `python -m project_infra context <ID> --reviewer`，浏览主干与实验脉络，
 读取 Plan Review 或 Experiment Review 中上次 note，然后按需展开文件。
@@ -72,6 +77,8 @@ Review 只记录实际独立审查，普通自检写在 Verification，不自动
 
 先记录实质问题，再停止本轮工作。执行者负责修改；下次只复核相关变化。
 这份文件与 note 支持会话恢复，不意味着工具已自动调用任何模型。
+具体交接：执行者运行 review <ID> --prepare，得到上下文与空白 NOTE；宿主在独立 subagent 中使用该上下文，并将业务目录设为只读、只允许写 NOTE。审查者填好简短 note 后，执行者用 review <ID> --record <NOTE路径> 写回对象。
+本工具提供交接与导入校验，不是模型调度器；独立会话和操作系统级读写隔离必须由宿主 Agent 环境实施，单靠提示词不构成强制权限隔离。
 '''
 
 STARTER_README = '''# 项目工作台
@@ -113,9 +120,12 @@ PROJECT.md 保存正式采用的设计主干；TOOLKIT.md 索引本项目实际�
 def initialize(store):
     root = store.root
     root.mkdir(parents=True, exist_ok=True)
-    for directory in ('.project', '.project/templates', '.work', 'library/files', 'docs'):
+    for directory in ('.project', '.project/templates', '.work', 'library/files', 'docs', 'knowledge', 'shared', 'experiments'):
         store.path(directory).mkdir(parents=True, exist_ok=True)
     files = {'AGENTS.md': AGENTS, 'docs/reviewer.md': REVIEWER, 'README.md': STARTER_README,
+             'knowledge/index.md': '# 项目知识\n\n在此链接经过提炼、值得跨实验复用的知识文档。每份知识写清结论、适用边界及来源实验/证据，按需提供重跑入口；有价值的负面结论同样可以沉淀。\n不保存全部实验流水账，不另设历史层或知识状态机。当前采用的设计仍由 PROJECT.md 维护，外部论文和手册放 library/。\n',
+             'shared/README.md': '# 项目级共享实现\n\n此目录存放按能力命名的真实代码与工具文件，生命周期独立于 Experiment。若项目已有 src/ 或可安装包，优先在那里复用，不复制第二套实现。\nTOOLKIT.md 索引实际模块与调用方法；实验入口放 experiments/ 或现有实验目录，直接导入共享模块。不要让共享模块反向依赖某个实验目录。空项目没有业务实现，需要由项目按所用语言补入。\n',
+             'experiments/README.md': '# 实验入口\n\n这里放输入、配置、共享调用与产物保存等薄入口；记录仍在 .project/experiments/。不要把整份项目实现复制到每次实验里。共享逻辑进入 shared/ 或现有源码包，再通过正常模块导入或项目构建调用。\n',
              'docs/verification.md': '# 验证入口\n\n在本项目填写现有运行环境、依赖定位、工作目录、验证命令和所需服务。机器专属路径不要当成其他机器的默认值。\n先定位已有依赖；默认导入失败不等于未安装，不自动安装或升级。\n区分断言失败、环境阻断与未执行；阻断不证明功能通过或没有缺陷。历史测试数量与验证方式不是新的验收要求，收口条件以当前对象为准。\n',
              'TOOLKIT.md': '# 共享工具包\n\n写实验前先搜索并复用已有共享实现，在这里列出项目包、数据处理、评价、绘图及验证入口。\nExperiment 只保留输入、参数、共享调用与产物保存。通用逻辑进入按能力命名的共享模块，不在每个实验复制一份。\n清理实验不能删除被其他实验或项目代码使用的共享能力。\n',
              'PROJECT.md': '+++\nmainline = []\n+++\n\n# 项目设计主干\n\n填写项目目标、当前总体方案、选择理由和未解决问题。\n',

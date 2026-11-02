@@ -8,6 +8,8 @@ import time
 import winreg
 
 root = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(root))
+from project_infra import __version__
 compiler = Path(sys.argv[1]).resolve()
 stamp = str(time.time_ns())
 product_id = 'ProjectInfra.Smoke.' + stamp
@@ -42,7 +44,7 @@ def uninstall_exists():
         return None
 
 run([compiler, '/Qp', '/DSourceDir=' + str(root / 'dist/portable/ProjectInfra'),
-     '/DProductId=' + product_id, '/DProductName=' + product_name, '/DOutputName=TestSetup',
+     '/DProductVersion=' + __version__, '/DProductId=' + product_id, '/DProductName=' + product_name, '/DOutputName=TestSetup',
      '/DRuntimeMutex=Local\\' + product_id,
      '/O' + str(scratch), root / 'installer/ProjectInfra.iss'])
 setup = scratch / 'TestSetup.exe'
@@ -54,7 +56,7 @@ assert not desktop_link.exists() and not start_link.exists() and uninstall_exist
 try:
     run([setup, '/VERYSILENT', '/SUPPRESSMSGBOXES', '/NORESTART', '/SP-', '/DIR=' + str(target),
          '/TASKS=desktopicon', '/LOG=' + str(scratch / 'install.log')])
-    assert uninstall_exists() == product_name + ' 0.1.0', uninstall_exists()
+    assert uninstall_exists() == product_name + ' ' + __version__, uninstall_exists()
     assert desktop_link.is_file() and start_link.is_file()
     quoted = str(desktop_link).replace("'", "''")
     shortcut = json.loads(powershell("$s=(New-Object -ComObject WScript.Shell).CreateShortcut('" + quoted + "'); @{target=$s.TargetPath; working=$s.WorkingDirectory; icon=$s.IconLocation}|ConvertTo-Json"))

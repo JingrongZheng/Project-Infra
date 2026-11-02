@@ -1,0 +1,5 @@
+[
+  {"id":"A","project_id":"alpha","text":"Fictional document A for the demonstration."},
+  {"id":"B","project_id":"beta","text":"Fictional document B from another project."},
+  {"id":"C","project_id":"alpha","text":"Fictional document C for the demonstration."}
+]

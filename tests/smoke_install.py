@@ -10,6 +10,8 @@ from urllib.request import Request, urlopen
 import zipfile
 
 root = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(root))
+from project_infra import __version__
 scratch = root / '.work' / ('offline-install-' + str(time.time_ns()))
 scratch.mkdir(parents=True)
 bundle = Path(sys.argv[1]).resolve()
@@ -33,7 +35,7 @@ command(['powershell', '-NoProfile', '-ExecutionPolicy', 'Bypass', '-File',
          unpacked / 'install-local.ps1', '-Destination', installation, '-Python', sys.executable])
 cli = installation / '.venv/Scripts/project-infra.exe'
 python = installation / '.venv/Scripts/python.exe'
-assert command([cli, '--version']).stdout.strip() == '0.1.0'
+assert command([cli, '--version']).stdout.strip() == __version__
 location = command([python, '-c', 'import project_infra; print(project_infra.__file__)']).stdout.strip()
 assert str(installation).casefold() in location.casefold(), location
 # Wrapper works with a Chinese installation path and the caller's current directory.

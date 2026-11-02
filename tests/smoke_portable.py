@@ -10,6 +10,9 @@ import time
 from urllib.request import urlopen
 import zipfile
 
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+from project_infra import __version__
+
 base = Path(__file__).resolve().parents[1] / '.work' / ('portable-check-' + str(time.time_ns()))
 original = base / '原位置'
 original.mkdir(parents=True)
@@ -28,7 +31,7 @@ def run(args, cwd=project):
     return result.stdout
 
 cli = app / 'project-infra.exe'
-assert run([cli, '--version']).strip() == '0.1.0'
+assert run([cli, '--version']).strip() == __version__
 run([cli, 'init'])
 run([cli, 'validate'])
 assert json.loads(run([cli, 'list', '--json'])) == []

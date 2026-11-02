@@ -55,6 +55,10 @@ def main(argv=None):
         if name in ('context', 'review'):
             p.add_argument('--full', action='store_true')
             p.add_argument('--reviewer', action='store_true')
+        if name == 'review':
+            group = p.add_mutually_exclusive_group()
+            group.add_argument('--prepare', action='store_true', help='Prepare a context and blank note for an independent reviewer')
+            group.add_argument('--record', metavar='NOTE', help='Import a completed note from a prepared handoff')
         if name == 'close':
             p.add_argument('--resolution')
     p = sub.add_parser('edit')
@@ -125,7 +129,14 @@ def main(argv=None):
         if args.command in ('run', 'verify'):
             return service.execute(args.id, args.command == 'verify')
         if args.command in ('context', 'review'):
-            print(service.context(args.id, args.full, args.reviewer or args.command == 'review'))
+            if args.command == 'review' and args.prepare:
+                from .review import prepare
+                print(prepare(service, args.id))
+            elif args.command == 'review' and args.record:
+                from .review import record
+                print('Recorded review:', record(service, args.id, args.record))
+            else:
+                print(service.context(args.id, args.full, args.reviewer or args.command == 'review'))
             return 0
         doc = docs.get(args.id)
         if not doc:

@@ -7,6 +7,8 @@ import zipfile
 import shutil
 
 root = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(root))
+from project_infra import __version__
 work = root / '.work' / 'portable-spec'
 work.mkdir(parents=True, exist_ok=True)
 spec = work / 'ProjectInfra.spec'
@@ -33,7 +35,7 @@ for notice in ['LICENSE', 'THIRD_PARTY_NOTICES.md']:
     shutil.copy2(root / notice, app / notice)
 shutil.copytree(root / 'licenses', app / 'licenses', dirs_exist_ok=True)
 (app / '使用说明.txt').write_text((root / 'docs/portable-use.md').read_text(encoding='utf-8'), encoding='utf-8')
-bundle = root / 'dist/project-infra-0.1.0-windows-portable.zip'
+bundle = root / f'dist/project-infra-{__version__}-windows-portable.zip'
 with zipfile.ZipFile(bundle, 'w', zipfile.ZIP_DEFLATED) as archive:
     for path in app.rglob('*'):
         if path.is_file():

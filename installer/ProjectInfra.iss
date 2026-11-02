@@ -8,8 +8,11 @@
 #ifndef ProductName
   #define ProductName "Project Infra"
 #endif
+#ifndef ProductVersion
+  #error Build with scripts/build_installer.py to supply ProductVersion
+#endif
 #ifndef OutputName
-  #define OutputName "ProjectInfra-0.1.0-Setup"
+  #define OutputName "ProjectInfra-" + ProductVersion + "-Setup"
 #endif
 #ifndef RuntimeMutex
   #define RuntimeMutex "Local\ProjectInfra.Desktop"
@@ -18,8 +21,8 @@
 [Setup]
 AppId={#ProductId}
 AppName={#ProductName}
-AppVersion=0.1.0
-AppVerName={#ProductName} 0.1.0
+AppVersion={#ProductVersion}
+AppVerName={#ProductName} {#ProductVersion}
 DefaultDirName={localappdata}\Programs\ProjectInfra
 DefaultGroupName={#ProductName}
 DisableDirPage=no
