@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024">
+  <title>Project Infra — PI</title>
+  <circle cx="512" cy="512" r="492" fill="#000000"/>
+  <g fill="#D5AF52">
+    <path fill-rule="evenodd" d="M258 272H452C561 272 624 338 624 436C624 534 561 600 452 600H350V752H258ZM350 360V512H448C501 512 532 483 532 436C532 389 501 360 448 360Z"/>
+    <path d="M674 272H766V752H674Z"/>
+  </g>
+</svg>

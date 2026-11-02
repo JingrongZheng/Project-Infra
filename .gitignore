@@ -1,0 +1,24 @@
+.work/
+.workbuddy/
+.venv/
+venv/
+.env
+.env.*
+!.env.example
+__pycache__/
+*.pyc
+.project/.write.lock
+.project/transaction.json
+*.infra-tmp
+build/
+dist/
+*.egg-info/
+
+# Private development project; public examples live under examples/.
+/.project/
+/PROJECT.md
+/TOOLKIT.md
+/library/
+/docs/verification.md
+/docs/implementation-notes.md
+/docs/github-sharing.md

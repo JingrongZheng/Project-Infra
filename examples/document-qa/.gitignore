@@ -1,0 +1,7 @@
+
+.work/
+__pycache__/
+*.pyc
+.project/.write.lock
+.project/transaction.json
+*.infra-tmp

@@ -1,0 +1,26 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "project-infra"
+version = "0.1.0"
+description = "Local file-backed project context and exploration workbench"
+license = {file = "LICENSE"}
+authors = [{name = "ZJR_suiliang"}]
+requires-python = ">=3.11"
+dependencies = []
+
+[project.urls]
+Homepage = "https://github.com/JingrongZheng/Project-Infra"
+Issues = "https://github.com/JingrongZheng/Project-Infra/issues"
+
+[project.scripts]
+project-infra = "project_infra.cli:main"
+
+[tool.setuptools]
+packages = ["project_infra"]
+include-package-data = false
+
+[tool.setuptools.package-data]
+project_infra = ["static/*.html", "static/*.js", "static/*.css", "static/*.svg", "assets/pi-monogram.png", "assets/pi-monogram.ico", "assets/pi-monogram.svg"]

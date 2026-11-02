@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="zh-CN">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Project Infra · 设计与探索</title><link rel="stylesheet" href="/style.css"></head>
+<body>
+<aside class="sidebar">
+  <div class="brand"><span class="brand-icon" aria-hidden="true">↗</span><span>PROJECT<br>INFRA<span class="brand-period">.</span></span></div><div class="brand-sub">让下一次探索，有迹可循。</div>
+  <div class="nav-label">项目工作台</div>
+  <nav aria-label="项目工作台"><button data-view="graph" class="selected" aria-label="项目脉络">⌘ <span>项目脉络</span></button><button data-view="plans" aria-label="探索看板">⑂ <span>探索看板</span></button><button data-view="experiments" aria-label="实验记录">▤ <span>实验记录</span></button><button data-view="proposals" aria-label="方向收件箱">◇ <span>方向收件箱</span></button><button data-view="library" aria-label="参考资料">▧ <span>参考资料</span></button></nav>
+  <div class="sidebar-art" aria-hidden="true"><img src="/facets.svg" alt=""></div>
+  <div class="sidebar-note">文件是项目记录<br>看板随文件自动更新</div>
+  <div id="connection" class="connection">● 正在连接</div><div id="root" class="root"></div>
+</aside>
+<main>
+  <header><div class="header-art" aria-hidden="true"><span>EXPLORE<span class="art-period">.</span></span><i></i><i></i><i></i></div><div class="header-copy"><div class="eyebrow"><span class="edition-mark" aria-hidden="true"></span> PROJECT WORKSPACE / <span id="breadcrumb">DESIGN</span></div><h1 id="heading">项目脉络</h1><p id="subtitle">看清设计如何演进，以及每条探索为什么发生。</p></div><div class="header-actions"><button id="project-edit" class="quiet">项目说明</button><button id="new" class="primary">＋ 新建</button></div></header>
+  <div id="diagnostics" role="alert" hidden></div>
+  <div class="toolbar"><div id="view-note"></div><div class="tools"><input id="search" placeholder="按编号搜索，如 1 或 PLAN-0001" aria-label="搜索"><button id="refresh" class="quiet">↻ 刷新</button></div></div>
+  <section id="content"></section>
+  <footer><span class="footer-brand">PROJECT INFRA <i aria-hidden="true">↗</i></span><span>本地文件 · 自动投影 · 按需审查</span></footer>
+</main>
+<dialog id="detail"><div class="dialog-top"><span id="detail-id"></span><button class="close quiet" aria-label="关闭">✕</button></div><div id="detail-content"></div></dialog>
+<dialog id="create"><div class="dialog-top"><strong>开启一项工作</strong><button class="close quiet" aria-label="关闭">✕</button></div><form id="create-form"><label>类型<select name="kind"><option value="plan">Plan · 有边界的探索</option><option value="experiment">Experiment · 一次具体尝试</option><option value="proposal">Proposal · 值得考虑的方向</option></select></label><label>标题<input name="title" required placeholder="用普通语言说明要做什么"></label><label>来源对象<select name="parent"><option value="">无</option></select></label><label>关联主干<select name="anchor"><option value="">暂未关联</option></select></label><p class="hint">Experiment 必须选择所属 Plan。所有创建都会写入项目文件。</p><button type="submit" class="primary">创建并打开</button><p class="error" id="create-error"></p></form></dialog>
+<div id="toast" role="status" hidden></div>
+<script src="/graph-layout.js"></script><script src="/app.js"></script>
+</body></html>
