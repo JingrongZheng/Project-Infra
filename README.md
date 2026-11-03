@@ -6,6 +6,8 @@
 
 Project Infra 是一套面向探索型开发、研究项目和 Vibe Coding 的项目基础设施：让项目自己保存当前设计、探索依据、长期知识与共享实现，支持零背景 Agent 接手，以及低频独立质疑。Markdown / TOML 和源码文件是记录本体，可视化看板只是它们的可编辑投影。
 
+当前处于 **0.x 探索阶段**，优先完善设计，文件结构、模板与机制可以调整，不承诺跨版本兼容。从 **1.0.0 正式版**开始，再明确稳定格式、兼容范围与升级规则。
+
 [下载安装包](https://github.com/JingrongZheng/Project-Infra/releases/latest) · [安装说明](docs/install-wizard.md) · [开发与构建](docs/development.md) · [变更日志](CHANGELOG.md) · [MIT 许可](LICENSE)
 
 ## 先理解设计，而不是先看界面
@@ -49,8 +51,6 @@ Plan 的 `Execution plan` 是围绕当前探索目标的动态执行计划，随
 
 这属于执行计划中的工作约定，不增加步骤调度器或新对象状态，也不自动识别、抽取重复代码。
 
-升级时已有 AGENTS.md 和 Plan 会保留，不自动覆盖；将上述指引合并到已有 AGENTS.md，并按需给现有 Plan 添加 `Execution plan` 小节。新建 Plan 会直接使用新模板。
-
 共享逻辑从实验里抽出，进入项目级模块；实验只组织输入、参数、调用和产物。共享模块不能反向依赖某个实验目录，清理实验也不应删除共享能力。
 
 仓库中的实际示例：
@@ -87,7 +87,7 @@ project-infra deliver PLAN-0001
 project-infra review PLAN-0001 --record .work/reviews/PLAN-0001/<本轮>/NOTE.md
 ```
 
-完整的进程/宿主接入、JSON 协议与升级说明见 [质疑者接入指南](docs/reviewer-integration.md)。程序不验证审查者身份或思考质量；独立会话与权限由宿主/适配器落实，不把提示词或普通进程当成操作系统权限隔离。意见记录不自动等于方案通过、对象关闭或主干采用。
+完整的进程/宿主接入与 JSON 协议见 [质疑者接入指南](docs/reviewer-integration.md)。程序不验证审查者身份或思考质量；独立会话与权限由宿主/适配器落实，不把提示词或普通进程当成操作系统权限隔离。意见记录不自动等于方案通过、对象关闭或主干采用。
 
 ## 功能演示
 
