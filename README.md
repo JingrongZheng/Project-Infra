@@ -87,12 +87,6 @@ project-infra review PLAN-0001 --record .work/reviews/PLAN-0001/<本轮>/NOTE.md
 
 完整的进程/宿主接入与 JSON 协议见 [质疑者接入指南](docs/reviewer-integration.md)。独立会话由宿主/适配器提供，项目写保护与权限恢复由 Project Infra 完成，不需要密码或额外账户。程序不验证审查者身份或思考质量。意见记录不自动等于方案通过、对象关闭或主干采用。
 
-## 功能演示
-
-下面的截图和动图来自实际运行的 [示例项目](examples/document-qa)。项目内容、指标和结论均为构造的演示数据，不代表真实实验或模型性能。
-
-![Project Infra 功能演示：项目图、入线高亮、实验结果、状态看板与编号搜索](docs/media/demo.gif)
-
 ### 看清探索
 
 设计主干向下展开，Plan 从对应设计分支出发。Experiment 可以串行、并行、分叉、多路汇合，再继续探索。节点仅展示名称与状态，详细过程、结论和证据点击后查看。
