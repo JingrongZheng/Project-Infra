@@ -137,9 +137,58 @@ os._exit(0)
             time.sleep(.05)
         self.assertEqual(lock.read(self.store)['release_reason'], 'owner-exited')
 
+    def test_crash_partway_through_freezing_is_automatically_rolled_back(self):
+        command = '''from project_infra.store import Store
+from project_infra.review_lock import begin
+from project_infra.winacl import ACL
+import os,time,sys
+original = ACL.deny
+def interrupted(self,path,snapshot):
+    original(self,path,snapshot)
+    if path.name == 'code.py': os._exit(0)
+ACL.deny = interrupted
+begin(Store(sys.argv[1]),sys.argv[2],time.time()+30,'host')
+'''
+        result = subprocess.run([sys.executable, '-c', command, str(self.store.root), self.folder],
+            cwd=Path(__file__).resolve().parents[1], capture_output=True, timeout=15)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        limit = time.time() + 8
+        while lock.read(self.store).get('state') != 'released' and time.time() < limit:
+            time.sleep(.05)
+        self.assertEqual(lock.read(self.store).get('release_reason'), 'owner-exited')
+        self.source.write_text('recovered after partial freeze')
+
     def test_recovery_does_not_follow_links_or_leave_the_project(self):
         with self.assertRaises(ValueError):
             lock.checked_path(self.store, '../outside')
+
+    def test_controller_crash_stops_its_worker_tree_before_permissions_resume(self):
+        command = '''from project_infra.store import Store
+from project_infra.review_lock import begin
+from project_infra.reviewer_runtime import invoke
+import os,time,sys,threading
+from pathlib import Path
+store=Store(sys.argv[1]);folder=sys.argv[2]
+begin(store,folder,time.time()+30,'process')
+def crash_after_worker_starts():
+    marker=store.path(folder+'/checks/worker-pid.txt')
+    until=time.time()+10
+    while not marker.exists() and time.time()<until: time.sleep(.02)
+    os._exit(0 if marker.exists() else 4)
+threading.Thread(target=crash_after_worker_starts,daemon=True).start()
+invoke(store,{'command':[sys.executable,sys.argv[3],'hold-tree'],'timeout':20},{'action':'review'},folder)
+'''
+        result = subprocess.run([sys.executable, '-c', command, str(self.store.root), self.folder,
+            str(Path(__file__).with_name('reviewer_fixture.py'))],
+            cwd=Path(__file__).resolve().parents[1], capture_output=True, timeout=15)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        limit = time.time() + 8
+        while lock.read(self.store).get('state') != 'released' and time.time() < limit:
+            time.sleep(.05)
+        self.assertEqual(lock.read(self.store).get('release_reason'), 'owner-exited')
+        pid = int((self.output / 'checks/worker-pid.txt').read_text())
+        self.assertFalse(lock.alive(pid))
+        self.source.write_text('workers stopped, writes resumed')
 
     def test_hardlinks_are_rejected_before_changing_external_alias_permissions(self):
         alias = self.base / 'outside-alias.py'
@@ -156,3 +205,15 @@ os._exit(0)
         with self.assertRaises((ValueError, PermissionError)):
             lock.begin(self.store, self.folder, time.time() + 30, 'host', watchdog=False)
         self.assertTrue(lock.active(self.store))
+
+    def test_note_can_be_saved_atomically_but_manifest_cannot_be_replaced(self):
+        self.begin()
+        temporary = self.output / 'note.tmp'
+        temporary.write_text('atomic note')
+        os.replace(temporary, self.output / 'NOTE.md')
+        self.assertEqual((self.output / 'NOTE.md').read_text(), 'atomic note')
+        replacement = self.output / 'manifest.tmp'
+        replacement.write_text('bad')
+        with self.assertRaises(PermissionError):
+            os.replace(replacement, self.output / 'manifest.json')
+        self.assertEqual((self.output / 'manifest.json').read_text(), 'manifest.json')

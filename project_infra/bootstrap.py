@@ -1,5 +1,6 @@
 from pathlib import Path
-from .documents import KINDS, template
+import tomllib
+from .documents import KINDS, PROJECT_SCHEMA_VERSION, template
 
 
 AGENTS = '''# Agent 入口
@@ -71,7 +72,7 @@ REVIEWER = '''# 质疑者初始化
 输出简短 note：Reviewer: 署名；随后使用二级标题“已核查”“主要疑点”“未覆盖与下一步”。前两节必须填写。
 执行者负责处理意见。审查意见不等于通过，不自动关闭对象或采用设计。
 
-接入方式不限 subagent 或独立进程，见 docs/reviewer-integration.md。宿主/适配器提供独立会话；Project Infra 在交接前冻结项目写权限，审查结束先恢复原权限、再导入意见。执行者在此期间暂停修改，临时产物只写本轮 checks/，宿主先结束独立会话再回传。程序不证明审查者诚实或验证思考质量。
+接入方式不限 subagent 或独立进程，见 docs/reviewer-integration.md。宿主/适配器提供独立会话；Project Infra 在交接前冻结项目写权限，审查结束先恢复原权限、再导入意见。执行者在此期间暂停修改，临时产物只写本轮输出目录，context.md 与 manifest.json 不可改写；建议放在 checks/，宿主先结束独立会话再回传。程序不证明审查者诚实或验证思考质量。
 本轮临时目录在 .work/reviews/；成功导入后原始笔记长期保存在 .project/reviews/，并追加到对象 Review，不能用下一轮覆盖上一轮。
 '''
 
@@ -114,7 +115,7 @@ knowledge/ 保存跨实验可复用的结论与边界，并链接来源实验；
 '''
 
 
-REVIEWER_INTEGRATION = '''# 质疑者接入与启动自检（v0.4.0）
+REVIEWER_INTEGRATION = '''# 质疑者接入与启动自检（v1.0.0）
 
 Project Infra 不包含 Agent。它管理能力握手、交付检查点、项目写保护、异常与多轮意见；实际会话由你已有的工具提供，不限定模型、厂商、subagent 或独立进程。
 
@@ -188,9 +189,9 @@ project-infra deliver PLAN-0001
 
 ## 异常与关闭
 
-程序在项目外保存原权限备份（默认 %LOCALAPPDATA%/ProjectInfra/review-locks），再冻结项目所有普通写入；仅本轮 NOTE.md、stdout/stderr 日志与 checks/ 可写。context.md 和 manifest.json 同样只读。
+程序在项目外保存原权限备份（默认 %LOCALAPPDATA%/ProjectInfra/review-locks），再冻结项目所有普通写入；本轮输出目录允许保存笔记、日志及临时文件（含原子保存），其中 context.md 和 manifest.json 保持只读，不能替换或删除。
 
-收到本轮意见后，程序先恢复原权限，再校验和写回记录。异常退出、无效输出、空白意见不会记为完成；托管进程失败或超时会先停止进程再恢复。独立后台监护在主程序退出或截止时间到达时恢复权限，不依赖浏览器轮询；工作台重新打开项目也会先恢复遗留权限。
+收到本轮意见后，程序先恢复原权限，再校验和写回记录。异常退出、无效输出、空白意见不会记为完成；托管进程失败、超时或正常返回后，先停止本轮整个进程树、确认退出，再恢复。Windows Job Object 管理普通子孙进程，避免适配器退出后遗留后台工作。独立后台监护在主程序退出或截止时间到达时恢复权限，不依赖浏览器轮询；工作台重新打开项目也会先恢复遗留权限。
 
 取消用 reviewer disable --reason "取消本轮审查"，程序先恢复写入，再关闭审查能力。宿主模式需先由宿主停止独立会话；程序不能替外部宿主终止 subagent，超时回传会被拒绝。
 
@@ -206,11 +207,11 @@ project-infra deliver PLAN-0001
 
 每轮成功意见追加到 Plan / Experiment 的 Review；原始 note 和时间、来源指纹、轮次元数据原子写入 `.project/reviews/<ID>/`，建议随项目 Git 提交。这是附属审查记录，不增加工作对象或状态。
 
-reviewer 上下文包括相关对象的历轮意见与原始记录路径。新一轮注明复核哪条旧意见及结果，不自动让旧问题消失，不把多轮判断改写成一个“合并结论”。v0.2 的已有 Review 会保留，新轮次从其后追加。尚未导入的 .work note 只是现场，清理前先导入有效意见。
+reviewer 上下文包括相关对象的历轮意见与原始记录路径。新一轮注明复核哪条旧意见及结果，不自动让旧问题消失，不把多轮判断改写成一个“合并结论”。已有 Review 会保留，新轮次从其后追加。尚未导入的 .work note 只是现场，清理前先导入有效意见。
 
 ## 版本阶段
 
-当前为 0.x 探索阶段，不承诺跨版本兼容；正式版从 1.0.0 起定义稳定格式与升级规则。
+1.0.0 为首个正式版，项目格式基线为 schema_version = 2。1.x 保持对这一格式的支持；未知格式会拒绝初始化和业务写入。版本与升级边界见软件源码仓库 docs/versioning.md。
 
 测试中的 tests/reviewer_fixture.py 只是协议夹具，不调用模型，不能用它代表真实质疑者或研究结论。
 '''
@@ -218,6 +219,13 @@ reviewer 上下文包括相关对象的历轮意见与原始记录路径。新�
 
 def initialize(store):
     root = store.root
+    config = store.path('.project/config.toml')
+    if config.exists():
+        schema = tomllib.loads(config.read_text(encoding='utf-8-sig')).get('schema_version')
+        if type(schema) is not int or schema != PROJECT_SCHEMA_VERSION:
+            raise ValueError(f'Unsupported project schema_version {schema!r}; initialization did not change project files')
+    from .review_lock import assert_writable
+    assert_writable(store)
     root.mkdir(parents=True, exist_ok=True)
     for directory in ('.project', '.project/templates', '.work', 'library/files', 'docs', 'knowledge', 'shared', 'experiments'):
         store.path(directory).mkdir(parents=True, exist_ok=True)
@@ -228,7 +236,7 @@ def initialize(store):
              'docs/verification.md': '# 验证入口\n\n在本项目填写现有运行环境、依赖定位、工作目录、验证命令和所需服务。机器专属路径不要当成其他机器的默认值。\n先定位已有依赖；默认导入失败不等于未安装，不自动安装或升级。\n区分断言失败、环境阻断与未执行；阻断不证明功能通过或没有缺陷。历史测试数量与验证方式不是新的验收要求，收口条件以当前对象为准。\n',
              'TOOLKIT.md': '# 共享代码与工具索引\n\n真实代码放在项目级 shared/ 或已有 src/包目录，本文件只记录模块路径和导入/调用方式。不要把共享实现留在某个 Experiment 下，也不要在这里用 Markdown 代替代码。\n写实验前先查已有的数据处理、评价、绘图和验证入口；实验只保留输入、参数、共享调用与产物保存。\n清理实验不能删除被其他实验或项目代码使用的共享能力。\n',
              'PROJECT.md': '+++\nmainline = []\n+++\n\n# 项目设计主干\n\n填写项目目标、当前总体方案、选择理由和未解决问题。\n',
-             '.project/config.toml': 'schema_version = 2\n', 'library/index.toml': 'entry = []\n'}
+             '.project/config.toml': f'schema_version = {PROJECT_SCHEMA_VERSION}\n', 'library/index.toml': 'entry = []\n'}
     for kind, (prefix, folder) in KINDS.items():
         store.path(f'.project/{folder}').mkdir(exist_ok=True)
         files[f'.project/templates/{kind}.md'] = template(kind, prefix + '-0000', '填写标题')

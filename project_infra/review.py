@@ -55,13 +55,13 @@ def prepare(service, ident):
     folder.mkdir(parents=True)
     (folder / 'context.md').write_text(context + '\n\n# 执行边界\n'
         '这是显式交付检查点。交给未参与本次方案与实现的独立会话（subagent、进程或其他接入方式）；只审查，不提出替代实施方案或修改业务代码。\n'
-        'Project Infra 在交接前冻结项目写权限；仅本轮 NOTE.md、运行日志和 checks/ 可写。审查期间执行者暂停全部项目修改。\n'
+        'Project Infra 在交接前冻结项目写权限；仅本轮输出目录可写，context.md 和 manifest.json 仍只读。审查期间执行者暂停全部项目修改。\n'
         '宿主结束本轮独立会话后再交回意见，程序先恢复原权限、再导入；临时测试产物写 checks/，Git 检查使用 --no-optional-locks。\n'
         '核查适用的真实运行路径、端到端检查、数据泄露与投机完成，短 note 写实际证据及未覆盖范围。\n'
         '自动测试不冒充独立审查，导入 note 不自动关闭对象或采纳设计。\n', encoding='utf-8')
     (folder / 'NOTE.md').write_text(NOTE, encoding='utf-8')
     (folder / 'manifest.json').write_text(json.dumps({'id': ident, 'root': str(service.store.root),
-        'fingerprint': fingerprint, 'allowed_write': ['NOTE.md', 'checks/'],
+        'fingerprint': fingerprint, 'allowed_write': ['.'], 'readonly': ['context.md', 'manifest.json'],
         'runtime_id': capability['runtime_id'], 'deadline': deadline,
         'round': folder.name}, ensure_ascii=False, indent=2), encoding='utf-8')
     try:

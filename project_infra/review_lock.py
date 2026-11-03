@@ -124,7 +124,7 @@ def process_stamp(pid):
         k.CloseHandle(handle)
 
 
-def register_child(store, pid):
+def register_child(store, pid, job_name=None):
     with control_lock(store):
         data = read(store)
         if data.get('state') != 'active':
@@ -133,10 +133,16 @@ def register_child(store, pid):
         if stamp is None and alive(pid):
             raise OSError('无法监护本轮审查进程，拒绝开始审查')
         data.update(child=pid, child_stamp=stamp)
+        if job_name:
+            data['job_name'] = job_name
         write(store, data)
 
 
 def stop_child(data):
+    if data.get('job_name'):
+        from .review_process import stop_named
+        stop_named(data['job_name'])
+        return
     pid = data.get('child')
     if pid and data.get('child_stamp') is not None and alive(pid) and process_stamp(pid) == data['child_stamp']:
         subprocess.run(['taskkill', '/PID', str(pid), '/T', '/F'], capture_output=True,
@@ -198,10 +204,17 @@ def begin(store, folder, deadline, mode, watchdog=True):
                 if p.is_file() and p.stat().st_nlink > 1:
                     raise ValueError('文件存在硬链接，拒绝同时改变项目外别名的权限：' + str(p))
                 api.check_can_change(p)
-                data['entries'].append({'path': p.relative_to(store.root).as_posix(), **api.snapshot(p)})
+                entry = {'path': p.relative_to(store.root).as_posix(), **api.snapshot(p)}
+                if p == output:
+                    # Permit temporary outputs/atomic NOTE saves, but never remove the
+                    # round itself or delete protected context/manifest through its parent.
+                    entry['deny_mask'] = 0x10000 | 0x40
+                data['entries'].append(entry)
             # Persist ALL originals before applying any change. Recovery is idempotent.
             data['applying'] = True
             write(store, data)
+            if watchdog:
+                launch_watchdog(store, output.name)
             for entry in sorted(data['entries'], key=lambda e: len(Path(e['path']).parts), reverse=True):
                 api.deny(checked_path(store, entry['path']), entry)
             data['state'] = 'active'
@@ -213,12 +226,6 @@ def begin(store, folder, deadline, mode, watchdog=True):
             else:
                 data.update(state='released', release_reason='prepare-failed')
                 write(store, data)
-            raise
-    if watchdog:
-        try:
-            launch_watchdog(store, output.name)
-        except BaseException:
-            recover(store, 'watchdog-failed', output.name)
             raise
     return data
 

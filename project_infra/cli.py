@@ -49,6 +49,7 @@ def main(argv=None):
     p.add_argument('id')
     p = sub.add_parser('_review-watchdog', help=argparse.SUPPRESS)
     p.add_argument('round')
+    sub.add_parser('_review-exec', help=argparse.SUPPRESS)
     p = sub.add_parser('new')
     p.add_argument('kind', choices=KINDS)
     p.add_argument('--title', required=True)
@@ -88,6 +89,9 @@ def main(argv=None):
     try:
         store = Store(project_root(args.root, initializing=args.command == 'init'))
         service = Service(store)
+        if args.command == '_review-exec':
+            from .review_process import run_wrapper
+            return run_wrapper(store)
         if args.command == '_review-watchdog':
             from .review_lock import watch
             from .desktop import application_mutex

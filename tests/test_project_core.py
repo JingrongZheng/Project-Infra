@@ -54,6 +54,22 @@ Need actual review before any real delivery.
         initialize(self.store)
         self.assertEqual(p.read_text(), 'owner-maintained knowledge')
 
+    def test_unsupported_project_format_refuses_update_create_and_reinitialization(self):
+        target = self.service.checked()[0][self.plan]
+        original = self.store.path(target.path).read_bytes()
+        config = self.store.path('.project/config.toml')
+        for schema in ('3', '"2"'):
+            with self.subTest(schema=schema):
+                config.write_text('schema_version = ' + schema + '\n')
+                self.assertTrue(any('schema_version' in error for error in self.service.checked()[1]))
+                with self.assertRaises(ValueError):
+                    self.service.update(target.path, target.revision, {'title': 'must not write'})
+                with self.assertRaises(ValueError):
+                    self.service.create('plan', 'must not create')
+                with self.assertRaises(ValueError):
+                    initialize(self.store)
+                self.assertEqual(self.store.path(target.path).read_bytes(), original)
+
     def test_context_reads_only_index_and_explicitly_promoted_knowledge(self):
         self.store.path('knowledge/scope.md').write_text('REUSABLE_NEGATIVE_BOUNDARY', encoding='utf-8')
         self.store.path('knowledge/unrelated.md').write_text('DO_NOT_LOAD_EVERYTHING', encoding='utf-8')

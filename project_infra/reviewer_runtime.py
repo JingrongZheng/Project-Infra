@@ -77,16 +77,20 @@ def status(store):
 
 
 def probe(store, label, command=None, timeout=120):
-    from .winacl import ACL
-    protection = ACL()
-    protection.check_volume(store.root)
-    protection.check_can_change(store.root)
     if not label.strip() or not 1 <= timeout <= 3600:
         raise ValueError('Provide a reviewer label and a timeout between 1 and 3600 seconds')
     if command is not None and (not isinstance(command, list) or not command or
                                not all(isinstance(x, str) and x for x in command)):
         raise ValueError('Adapter command must be a nonempty JSON array of arguments')
     data = disable(store, '正在检查独立审查会话能力，尚未启用')
+    try:
+        from .winacl import ACL
+        protection = ACL()
+        protection.check_volume(store.root)
+        protection.check_can_change(store.root)
+    except OSError as exc:
+        disable(store, '写保护自检失败：' + str(exc))
+        raise
     nonce = uuid.uuid4().hex
     folder = f'.work/reviewer/probes/{nonce}'
     p = store.path(folder)
@@ -137,35 +141,52 @@ def invoke(store, data, request, folder):
     if request.get('action') == 'review':
         environment = dict(os.environ, TEMP=str(destination / 'checks'), TMP=str(destination / 'checks'),
                            TMPDIR=str(destination / 'checks'), GIT_OPTIONAL_LOCKS='0')
-    process = subprocess.Popen(data['command'], cwd=store.root, stdin=subprocess.PIPE,
-                               stdout=subprocess.PIPE, stderr=subprocess.PIPE, env=environment, **kwargs)
-    if request.get('action') == 'review':
-        from .review_lock import register_child
+    job = None
+    process = None
+    payload = request
+    command, cwd = data['command'], store.root
+    if os.name == 'nt':
+        from .review_process import Job, wrapper_command
+        job = Job()
+        command, cwd = wrapper_command(store)
+        payload = {'command': data['command'], 'request': request}
+    try:
+        process = subprocess.Popen(command, cwd=cwd, stdin=subprocess.PIPE,
+                                   stdout=subprocess.PIPE, stderr=subprocess.PIPE, env=environment, **kwargs)
         try:
-            register_child(store, process.pid)
+            if job:
+                job.attach(process)
+            if request.get('action') == 'review':
+                from .review_lock import register_child
+                register_child(store, process.pid, job.name if job else None)
         except BaseException:
             process.kill()
-            process.communicate()
+            process.communicate(timeout=5)
             raise
-    try:
-        out, err = process.communicate(json.dumps(request, ensure_ascii=False).encode('utf-8'),
-                                       timeout=data['timeout'])
-    except subprocess.TimeoutExpired:
-        if os.name == 'nt':
-            subprocess.run(['taskkill', '/PID', str(process.pid), '/T', '/F'],
-                           capture_output=True, creationflags=subprocess.CREATE_NO_WINDOW)
-        else:
-            os.killpg(process.pid, signal.SIGKILL)
-        process.kill() if process.poll() is None else None
-        out, err = process.communicate()
-        (destination / 'stdout.log').write_bytes(out)
-        (destination / 'stderr.log').write_bytes(err)
-        raise ValueError('Reviewer process timed out; no review was recorded')
+        try:
+            out, err = process.communicate(json.dumps(payload, ensure_ascii=False).encode('utf-8'),
+                                           timeout=data['timeout'])
+        except subprocess.TimeoutExpired:
+            if job:
+                job.stop()
+            else:
+                os.killpg(process.pid, signal.SIGKILL)
+            try:
+                out, err = process.communicate(timeout=5)
+            except subprocess.TimeoutExpired as exc:
+                raise ValueError('Reviewer output did not close after termination') from exc
+            (destination / 'stdout.log').write_bytes(out)
+            (destination / 'stderr.log').write_bytes(err)
+            raise ValueError('Reviewer process timed out; no review was recorded')
+    finally:
+        if job:
+            job.close()
     (destination / 'stdout.log').write_bytes(out)
     (destination / 'stderr.log').write_bytes(err)
     if request.get('action') == 'review':
         from .review_lock import read as protection_record
-        if protection_record(store).get('release_reason') == 'timeout':
+        protection = protection_record(store)
+        if protection.get('release_reason') == 'timeout' or protection.get('deadline', float('inf')) <= time.time():
             raise ValueError('Reviewer process timed out; project permissions restored')
     if process.returncode:
         raise ValueError(f'Reviewer process exited with code {process.returncode}; see {folder}/stderr.log')

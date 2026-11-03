@@ -129,6 +129,8 @@ def make_server(service, port=8765):
                 if not 0 < length <= 2_000_000:
                     raise ValueError('Invalid request size')
                 body = json.loads(self.rfile.read(length))
+                if not isinstance(body, dict):
+                    raise ValueError('Request body must be a JSON object')
                 if self.path == '/api/update':
                     service.update(body['path'], body['revision'], body.get('fields'), body.get('sections'), body.get('raw'))
                     result = {'ok': True}

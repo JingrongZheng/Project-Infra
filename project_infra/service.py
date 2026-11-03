@@ -5,7 +5,7 @@ import subprocess
 import tomllib
 from datetime import datetime, timezone
 
-from .documents import Document, KINDS, SECTIONS, STATES, digest, scalar, template
+from .documents import Document, KINDS, SECTIONS, STATES, PROJECT_SCHEMA_VERSION, digest, scalar, template
 from .store import Conflict
 from .validation import kind_of, library, mainline, validate
 
@@ -15,6 +15,12 @@ class Service:
         self.store = store
 
     def checked(self, overrides=None):
+        try:
+            schema = tomllib.loads(self.store.path('.project/config.toml').read_text(encoding='utf-8-sig')).get('schema_version')
+            if type(schema) is not int or schema != PROJECT_SCHEMA_VERSION:
+                return {}, [f'Unsupported project schema_version {schema!r}; this application supports {PROJECT_SCHEMA_VERSION}. Project files were not changed.']
+        except (OSError, ValueError) as exc:
+            return {}, ['Cannot read project format: ' + str(exc)]
         docs, errors = self.store.load(overrides)
         try:
             errors += validate(self.store, docs, overrides)
@@ -28,10 +34,19 @@ class Service:
             raise ValueError('\n'.join(errors))
 
     def update(self, path, expected_revision, fields=None, sections=None, raw=None):
+        if raw is not None and not isinstance(raw, str):
+            raise ValueError('Raw document content must be text')
+        if fields is not None and not isinstance(fields, dict):
+            raise ValueError('Editable fields must be an object')
+        if sections is not None and (not isinstance(sections, dict) or
+                not all(isinstance(k, str) and isinstance(v, str) for k, v in sections.items())):
+            raise ValueError('Document sections must map names to text')
         if not self.store.editable(path):
             raise ValueError('This file is not editable from the application')
         with self.store.locked():
             old = self.store.read(path) if path.endswith('.md') else None
+            if old is None and raw is None:
+                raise ValueError('Non-Markdown files require raw text content')
             data = self.store.path(path).read_bytes()
             if digest(data) != expected_revision:
                 raise Conflict('File changed; reload before saving. Your edits have not been discarded.')

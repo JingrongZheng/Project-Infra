@@ -5,6 +5,8 @@ import json
 import re
 import tomllib
 
+PROJECT_SCHEMA_VERSION = 2
+
 
 def digest(data: bytes) -> str:
     return hashlib.sha256(data).hexdigest()

@@ -11,6 +11,20 @@ if mode == 'timeout':
     time.sleep(30)
 if mode == 'review-timeout' and request['action'] == 'review':
     time.sleep(30)
+if mode == 'hold-tree' and request['action'] == 'review':
+    import os
+    child = subprocess.Popen([sys.executable, '-c', 'import time;time.sleep(30)'])
+    (Path(os.environ['TMP']) / 'worker-pid.txt').write_text(str(child.pid))
+    time.sleep(30)
+if mode in ('orphan', 'orphan-quiet') and request['action'] == 'review':
+    import os
+    child = subprocess.Popen([sys.executable, '-c',
+        'import time;from pathlib import Path;time.sleep(5);Path("orphan-write.txt").write_text("bad")'],
+        stdout=subprocess.DEVNULL if mode == 'orphan-quiet' else None,
+        stderr=subprocess.DEVNULL if mode == 'orphan-quiet' else None)
+    (Path(os.environ['TMP']) / 'orphan-pid.txt').write_text(str(child.pid))
+    if mode == 'orphan':
+        sys.exit(0)
 if mode == 'failure':
     print('fixture exit failure', file=sys.stderr)
     sys.exit(7)

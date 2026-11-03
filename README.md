@@ -6,7 +6,7 @@
 
 Project Infra 是一套面向探索型开发、研究项目和 Vibe Coding 的项目基础设施：让项目自己保存当前设计、探索依据、长期知识与共享实现，支持零背景 Agent 接手，以及低频独立质疑。Markdown / TOML 和源码文件是记录本体，可视化看板只是它们的可编辑投影。
 
-[下载安装包](https://github.com/JingrongZheng/Project-Infra/releases/latest) · [安装说明](docs/install-wizard.md) · [开发与构建](docs/development.md) · [变更日志](CHANGELOG.md) · [MIT 许可](LICENSE)
+[下载安装包](https://github.com/JingrongZheng/Project-Infra/releases/latest) · [安装说明](docs/install-wizard.md) · [开发与构建](docs/development.md) · [变更日志](CHANGELOG.md) · [版本约定](docs/versioning.md) · [MIT 许可](LICENSE)
 
 ## 设计
 
@@ -83,7 +83,7 @@ project-infra deliver PLAN-0001
 project-infra review PLAN-0001 --record .work/reviews/PLAN-0001/<本轮>/NOTE.md
 ```
 
-审查采用串行交接：**完成修改 → 保存原权限并冻结项目 → 独立审查 → 恢复权限 → 记录意见 → 继续修改**。审查期间暂停项目写入，仅本轮 NOTE、日志和 checks 可写。失败、超时会执行恢复，重新打开工作台时也会恢复遗留权限。
+审查采用串行交接：**完成修改 → 保存原权限并冻结项目 → 独立审查 → 恢复权限 → 记录意见 → 继续修改**。审查期间暂停项目写入，仅本轮输出目录可写，其中 context.md 与 manifest.json 保持只读。失败、超时会执行恢复，重新打开工作台时也会恢复遗留权限。
 
 完整的进程/宿主接入与 JSON 协议见 [质疑者接入指南](docs/reviewer-integration.md)。独立会话由宿主/适配器提供，项目写保护与权限恢复由 Project Infra 完成，不需要密码或额外账户。程序不验证审查者身份或思考质量。意见记录不自动等于方案通过、对象关闭或主干采用。
 
@@ -111,7 +111,7 @@ project-infra review PLAN-0001 --record .work/reviews/PLAN-0001/<本轮>/NOTE.md
 
 ### Windows 安装版
 
-1. 在 [Releases](https://github.com/JingrongZheng/Project-Infra/releases/latest) 下载 `ProjectInfra-0.4.0-Setup.exe`。
+1. 在 [Releases](https://github.com/JingrongZheng/Project-Infra/releases/latest) 下载 `ProjectInfra-1.0.0-Setup.exe`。
 2. 按中文向导选择安装位置，保留“创建桌面快捷方式”。
 3. 双击桌面的 Project Infra，选择已有项目或一个空文件夹。
 4. 空目录经确认后生成项目骨架，看板自动在系统默认浏览器中打开。

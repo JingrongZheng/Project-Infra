@@ -180,6 +180,29 @@ class ReviewerRuntimeTests(unittest.TestCase):
         self.assertEqual(history(self.store, self.plan), [])
         self.assertTrue(list(self.store.path('.work/reviews').rglob('stderr.log')))
 
+    def test_orphan_descendant_cannot_write_after_review_timeout(self):
+        self.process('orphan', timeout=2)
+        with self.assertRaises(ValueError):
+            deliver(self.service, self.plan)
+        self.assertFalse(self.store.path('orphan-write.txt').exists(), 'A descendant survived timeout and wrote after permissions were restored')
+        self.assertEqual(history(self.store, self.plan), [])
+
+    def test_successful_response_still_terminates_background_workers(self):
+        self.process('orphan-quiet')
+        result = deliver(self.service, self.plan)
+        pid = int(self.store.path(result['handoff'] + '/checks/orphan-pid.txt').read_text())
+        from project_infra.review_lock import alive
+        self.assertFalse(alive(pid), 'Background worker survived a completed review')
+        self.assertTrue(result['reviewed'])
+        self.assertFalse(self.store.path('orphan-write.txt').exists())
+
+    def test_failed_permission_probe_disables_previously_enabled_capability(self):
+        self.host()
+        with patch('project_infra.winacl.ACL.check_volume', side_effect=OSError('fixture unsupported filesystem')):
+            with self.assertRaises(OSError):
+                runtime.probe(self.store, 'unsupported fixture')
+        self.assertFalse(runtime.status(self.store)['enabled'])
+
     def test_recheck_rejects_old_pending_note(self):
         self.host()
         folder = deliver(self.service, self.plan)['handoff']

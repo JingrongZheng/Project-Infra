@@ -12,5 +12,5 @@
 输出简短 note：Reviewer: 署名；随后使用二级标题“已核查”“主要疑点”“未覆盖与下一步”。前两节必须填写。
 执行者负责处理意见。审查意见不等于通过，不自动关闭对象或采用设计。
 
-接入方式不限 subagent 或独立进程，见 docs/reviewer-integration.md。宿主/适配器提供独立会话；Project Infra 在交接前冻结项目写权限，审查结束先恢复原权限、再导入意见。执行者在此期间暂停修改，临时产物只写本轮 checks/，宿主先结束独立会话再回传。程序不证明审查者诚实或验证思考质量。
+接入方式不限 subagent 或独立进程，见 docs/reviewer-integration.md。宿主/适配器提供独立会话；Project Infra 在交接前冻结项目写权限，审查结束先恢复原权限、再导入意见。执行者在此期间暂停修改，临时产物只写本轮输出目录，context.md 与 manifest.json 不可改写；建议放在 checks/，宿主先结束独立会话再回传。程序不证明审查者诚实或验证思考质量。
 本轮临时目录在 .work/reviews/；成功导入后原始笔记长期保存在 .project/reviews/，并追加到对象 Review，不能用下一轮覆盖上一轮。

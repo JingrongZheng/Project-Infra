@@ -98,9 +98,10 @@ class ACL:
         raw = base64.b64decode(original['dacl']) if original['dacl'] is not None else None
         old = c.create_string_buffer(raw) if raw else None
         revision = raw[0] if raw else 2
-        buf = c.create_string_buffer((len(raw) if raw else 8) + len(self.sid) + 128)
+        size = ((len(raw) if raw else 8) + len(self.sid) + 128 + 3) & ~3
+        buf = c.create_string_buffer(size)
         self.check(self.a.InitializeAcl(buf, len(buf), revision))
-        self.check(self.a.AddAccessDeniedAceEx(buf, revision, 0, WRITE_DENY, self.sid))
+        self.check(self.a.AddAccessDeniedAceEx(buf, revision, 0, original.get('deny_mask', WRITE_DENY), self.sid))
         if old is not None:
             count = c.c_ushort.from_buffer(old, 4).value
             for index in range(count):

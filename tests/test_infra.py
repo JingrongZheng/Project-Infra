@@ -43,6 +43,19 @@ class Fixture(unittest.TestCase):
 
 
 class ProjectTests(Fixture):
+    def test_invalid_update_payloads_do_not_change_files(self):
+        ident = self.plan()
+        doc = self.get(ident)
+        for payload in ({'fields': []}, {'sections': {'Notes': 3}}, {'raw': []}):
+            with self.subTest(payload=payload):
+                with self.assertRaises(ValueError):
+                    self.service.update(doc.path, doc.revision, **payload)
+                self.assertEqual(self.get(ident).revision, doc.revision)
+        original = self.store.path('library/index.toml').read_bytes()
+        with self.assertRaises(ValueError):
+            self.service.update('library/index.toml', digest(original), fields={'entry': []})
+        self.assertEqual(self.store.path('library/index.toml').read_bytes(), original)
+
     def test_compact_context_preserves_continuation_and_reusable_setup_guidance(self):
         plan = self.plan()
         exp = self.service.create('experiment', '界面试用', plan)

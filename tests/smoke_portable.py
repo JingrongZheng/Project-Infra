@@ -112,6 +112,19 @@ try:
     run([cli, '--root', project, 'review', plan, '--record', str(note.relative_to(project))], cwd=project)
     assert 'packaged test fixture' in (project / '.project/plans' / (plan + '.md')).read_text(encoding='utf-8')
     (project / '.work/restored-write.txt').write_text('writing restored', encoding='utf-8')
+    # Exercise the frozen process wrapper and child job, not just source Python.
+    fixture = Path(__file__).resolve().with_name('reviewer_fixture.py')
+    command_file = base / 'fixture-command.json'
+    command_file.write_text(json.dumps([sys.executable, str(fixture), 'orphan-quiet']), encoding='utf-8')
+    run([cli, '--root', project, 'reviewer', 'check', '--label', 'packaged process fixture',
+         '--command-file', command_file, '--timeout', '10'], cwd=project)
+    process_result = json.loads(run([cli, '--root', project, 'deliver', plan], cwd=project))
+    assert process_result['reviewed'], process_result
+    from project_infra.review_lock import alive
+    child_pid = int((project / process_result['handoff'] / 'checks/orphan-pid.txt').read_text())
+    assert not alive(child_pid), 'Packaged adapter left a worker after review'
+    assert not (project / 'orphan-write.txt').exists()
+    (project / '.work/process-restored.txt').write_text('process job exited before restore', encoding='utf-8')
     # The packaged detached watchdog must work after the prepare CLI has exited.
     capability = json.loads(run([cli, '--root', project, 'reviewer', 'probe', '--timeout', '2'], cwd=project))
     request = json.loads((project / capability['request']).read_text(encoding='utf-8'))
