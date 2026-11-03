@@ -129,8 +129,8 @@ def validate(store, docs, overrides=None):
                     error(doc.path, 'Closed Plan needs Synthesis')
                 if m.get('resolution') in ('supported', 'refuted') and not m.get('experiments'):
                     error(doc.path, 'Supported/refuted Plan needs an Experiment')
-                if m.get('resolution') != 'abandoned' and not doc.section('Review'):
-                    error(doc.path, 'Delivered conclusion needs Review')
+                if m.get('resolution') != 'abandoned' and not (doc.section('Review') or doc.section('Delivery')):
+                    error(doc.path, 'Delivered conclusion needs Review or an explicit Delivery record without independent review')
             for path in m.get('project_docs_updated', []):
                 if not store.path(path).is_file() and path not in (overrides or {}):
                     error(doc.path, 'Missing Project Doc ' + path)

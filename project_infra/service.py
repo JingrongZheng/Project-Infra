@@ -36,6 +36,18 @@ class Service:
             if digest(data) != expected_revision:
                 raise Conflict('File changed; reload before saving. Your edits have not been discarded.')
             text = raw if raw is not None else old.patch(fields, sections)
+            candidate = Document(path, text, '') if old else None
+            if (old and kind_of(old) == 'plan' and old.meta.get('status') != 'closed'
+                    and candidate.meta.get('status') == 'closed' and candidate.meta.get('resolution') != 'abandoned'):
+                from .review import require_delivery
+                from .reviewer_runtime import status
+                message = require_delivery(self, old.meta['id'])
+                if status(self.store).get('enabled'):
+                    old_meta = {k: v for k, v in old.meta.items() if k not in ('status', 'resolution')}
+                    new_meta = {k: v for k, v in candidate.meta.items() if k not in ('status', 'resolution')}
+                    if old_meta != new_meta or old.body.strip() != candidate.body.strip():
+                        raise ValueError('先保存候选方案内容，再审查，最后关闭；不能在关闭时修改审查对象')
+                text = candidate.patch(sections={'Delivery': message})
             changes = {path: text}
             self.require_valid(changes)
             if old and kind_of(old) in ('plan', 'experiment'):
@@ -43,7 +55,9 @@ class Service:
                 if old.meta.get('status') != 'closed' and new.meta.get('status') == 'closed' and new.meta.get('verify'):
                     old_meta = {k: v for k, v in old.meta.items() if k not in ('status', 'resolution')}
                     new_meta = {k: v for k, v in new.meta.items() if k not in ('status', 'resolution')}
-                    if old_meta != new_meta or old.body.strip() != new.body.strip():
+                    old_body = Document(path, old.patch(sections={'Delivery': ''}), '').body.strip()
+                    new_body = Document(path, new.patch(sections={'Delivery': ''}), '').body.strip()
+                    if old_meta != new_meta or old_body != new_body:
                         raise ValueError('Save changed acceptance/evidence fields first, then verify, then close')
                     receipt = self.store.path(f'.work/{KINDS[kind_of(old)][1]}/{old.meta["id"]}/verification.json')
                     result = json.loads(receipt.read_text(encoding='utf-8')) if receipt.exists() else {}
@@ -143,10 +157,20 @@ class Service:
         if errors:
             chunks.append('# Diagnostics\n' + '\n'.join(errors))
         if reviewer:
+            from .reviewer_runtime import status
+            chunks.append('# Reviewer capability\n' + json.dumps(status(self.store), ensure_ascii=False))
             p = self.store.path('docs/reviewer.md')
             if p.exists():
                 chunks.append('# Reviewer initialization\n' + p.read_text(encoding='utf-8'))
         chunks.append('# ' + ident + '\n' + doc.raw)
+        if reviewer:
+            from .review import history
+            for related in [doc] + [item for item in docs.values()
+                    if kind_of(doc) == 'plan' and item.meta.get('plan') == ident]:
+                rounds = history(self.store, related.meta['id'])
+                if rounds:
+                    chunks.append('# 历轮审查原始记录 ' + related.meta['id'] + '\n' + '\n'.join(
+                        f'{r["round"]} · {r["time"]} · {r["note"]}' for r in rounds))
         selected = set()
         if kind_of(doc) == 'plan':
             if doc.meta.get('proposal'):
@@ -215,6 +239,7 @@ class Service:
         return '\n\n'.join(chunks)
 
     def state(self):
+        from .reviewer_runtime import status
         docs, errors = self.checked()
         objects = []
         for ident, doc in docs.items():
@@ -233,6 +258,7 @@ class Service:
         except (OSError, ValueError, TypeError):
             entries = []
         return {'objects': objects, 'mainline': nodes, 'library': entries, 'errors': errors,
+                'reviewer': status(self.store),
                 'toolkit': {'path': 'TOOLKIT.md', 'revision': toolkit.revision, 'body': toolkit.body} if toolkit else None,
                 'project': {'path': 'PROJECT.md', 'revision': project.revision, 'body': project.body} if project else None,
                 'states': STATES, 'root': str(self.store.root)}

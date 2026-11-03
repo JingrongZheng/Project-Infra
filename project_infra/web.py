@@ -1,4 +1,4 @@
-"""Local-only UI. No model calls or shell execution exposed over HTTP."""
+"""Local-only UI. Delivery may invoke a CLI-configured adapter; HTTP cannot configure commands."""
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 import json
@@ -24,13 +24,15 @@ class ProjectionCache:
             if not fresh['errors']:
                 self.good = fresh
             elif self.good:
-                fresh = {**self.good, 'errors': fresh['errors'], 'stale': True}
+                fresh = {**self.good, 'errors': fresh['errors'], 'reviewer': fresh['reviewer'], 'stale': True}
             else:
                 fresh = {**fresh, 'objects': [], 'mainline': [], 'library': [], 'project': None, 'stale': True}
             return fresh
 
 
 def make_server(service, port=8765):
+    from .reviewer_runtime import disable
+    disable(service.store, '工作台新会话尚未接入独立质疑者，请执行启动自检；质疑功能已关闭')
     token = secrets.token_urlsafe(24)
     cache = ProjectionCache(service)
     static = Path(__file__).parent / 'static'
@@ -130,6 +132,9 @@ def make_server(service, port=8765):
                     result = {'ok': True}
                 elif self.path == '/api/create':
                     result = {'id': service.create(body['kind'], body['title'], body.get('parent'), body.get('anchor'), body.get('predecessors'))}
+                elif self.path == '/api/deliver':
+                    from .review import deliver
+                    result = deliver(service, body['id'])
                 else:
                     return self.respond(404, {'error': 'Unknown command'})
                 self.respond(200, result)

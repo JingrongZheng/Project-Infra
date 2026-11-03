@@ -38,6 +38,15 @@ def main(argv=None):
     sub.add_parser('init')
     sub.add_parser('validate')
     sub.add_parser('status')
+    p = sub.add_parser('reviewer', help='Current environment reviewer capability self-check')
+    p.add_argument('action', choices=('status', 'probe', 'check', 'accept', 'disable'))
+    p.add_argument('--label', default='host reviewer')
+    p.add_argument('--command-file', help='Local JSON file containing adapter argv (no shell string)')
+    p.add_argument('--response', help='JSON response from the host-created independent session')
+    p.add_argument('--timeout', type=int, default=600)
+    p.add_argument('--reason', default='当前环境未接入独立审查会话')
+    p = sub.add_parser('deliver', help='Explicit delivery checkpoint; invoke review only here')
+    p.add_argument('id')
     p = sub.add_parser('new')
     p.add_argument('kind', choices=KINDS)
     p.add_argument('--title', required=True)
@@ -89,11 +98,35 @@ def main(argv=None):
         if args.command == 'new':
             print(service.create(args.kind, args.title, args.parent, args.anchor, args.after))
             return 0
+        if args.command == 'reviewer':
+            from . import reviewer_runtime as runtime
+            if args.action == 'status':
+                result = runtime.status(store)
+            elif args.action == 'disable':
+                result = runtime.disable(store, args.reason)
+            elif args.action == 'accept':
+                if not args.response:
+                    raise ValueError('accept requires --response FILE')
+                response_path = Path(args.response) if Path(args.response).is_absolute() else store.path(args.response)
+                result = runtime.accept(store, json.loads(response_path.read_text(encoding='utf-8-sig')))
+            else:
+                if args.action == 'check' and not args.command_file:
+                    raise ValueError('check requires --command-file FILE; use probe for a host/subagent handshake')
+                command = json.loads(Path(args.command_file).read_text(encoding='utf-8-sig')) if args.command_file else None
+                result = runtime.probe(store, args.label, command, args.timeout)
+            print(json.dumps(result, ensure_ascii=False, indent=2))
+            return 0
+        if args.command == 'deliver':
+            from .review import deliver
+            print(json.dumps(deliver(service, args.id), ensure_ascii=False, indent=2))
+            return 0
         docs, errors = service.checked()
         if args.command == 'validate':
             print('\n'.join(errors) if errors else 'OK — files, states, references and mainline are valid.')
             return 1 if errors else 0
         if args.command == 'status':
+            from .reviewer_runtime import status
+            print('Reviewer:', json.dumps(status(store), ensure_ascii=False))
             for kind in KINDS:
                 print(kind, dict(Counter(d.meta.get('status', 'inbox') for d in docs.values() if kind_of(d) == kind)))
             print('Diagnostics:', len(errors))

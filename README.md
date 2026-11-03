@@ -60,24 +60,28 @@ examples/document-qa/
 两个实验都通过 `from shared.documents import ...` 正常导入，不需要从另一个实验目录找工具，也不修改 `sys.path`。
 空项目只生成共享目录和指引，不凭空生成业务代码；已有 `src/` 或安装包时优先复用既有源码结构，不强制再造一个 `shared` 实现。
 
-### 质疑者低频介入，只审查，不替执行者解决项目
+### 质疑者低频介入，由程序管理交付与多轮意见
 
-质疑者在一条探索分支准备收口时才出现。它应是未参与本次方案提出与业务实现的独立 subagent，阅读设计、知识、实验脉络、已有 note 和真实代码，选择适用检查：端到端运行、负例、数据泄露、评价污染、绕过测试或假完成等。
+质疑者需要是未参与本次方案制定与实现的独立会话，不限定 subagent、独立进程或具体模型工具。Project Infra 不附带 agent；执行者启动时按 AGENTS.md 检查当前环境并接入已有工具，不自动安装另一套 agent。
 
-v0.2.0 提供可执行的交接流程：
+- 启动自检只完成能力握手，不评价项目方案。未接入、换环境、工作台重启或自检过期时，界面明确提示质疑功能关闭；不妨碍其他工作。
+- 通过能力检查后，正式审查仅由显式 `deliver <ID>` 发起；普通实验、验证和查看上下文不会调用审查 agent。
+- 进程模式由程序启动本地配置的适配器、传入上下文并收集意见；宿主模式返回交接包，允许宿主使用自己的 subagent 或其他独立会话完成审查。
+- 超时、异常退出、无效输出和审查期间源码变化均不会生成已完成记录；保留临时现场和日志。
+- 每轮意见追加到对象 Review，原始笔记与轮次元数据长期保存在 `.project/reviews/<ID>/`。往期意见和来源路径进入下轮上下文；不自动改写或合并不同轮次的判断。
+- 能力可用时，Plan 关闭要求当前项目内容已有本轮审查交接记录；内容修改后需要重新审查。能力缺失时允许继续交付，但 Delivery 明确注明“未执行独立审查”，不能显示为审查通过。放弃 Plan、普通 Experiment 结束不强制召唤质疑者。
 
 ```sh
-project-infra review PLAN-0001 --prepare
-# 输出 .work/reviews/PLAN-0001/<本次目录>/
-# 宿主把 context.md 交给独立 subagent，审查者写 NOTE.md
-project-infra review PLAN-0001 --record .work/reviews/PLAN-0001/<本次目录>/NOTE.md
+project-infra reviewer status
+# 宿主模式：返回能力请求，交给新建的独立审查会话
+project-infra reviewer probe --label "当前宿主" --timeout 600
+project-infra reviewer accept --response .work/reviewer/probes/<编号>/response.json
+project-infra deliver PLAN-0001
+# 宿主完成正式审查后导入；进程模式会自动收集并导入
+project-infra review PLAN-0001 --record .work/reviews/PLAN-0001/<本轮>/NOTE.md
 ```
 
-准备动作不会生成“审查通过”；导入要求实际填写审查者、已核查内容和主要疑点，拒绝空模板、错误目标以及准备后源内容发生变化的交接。note 写回原 Plan / Experiment 的 Review，已有看板会按需显示审查节点，不新增工作对象或状态。
-
-**实现边界需要明确：** 本工具不自动启动模型，也不能仅凭文字核实审查者身份或证明它确实独立。独立会话和读写权限由宿主 Agent 环境提供：业务源码、知识与项目记录只读，交接目录允许写 note 和临时检查产物。源码变化检测是导入校验，不能替代权限隔离。导入 note 不自动采纳设计或关闭对象。
-
-实际角色指引见 [reviewer.md](docs/reviewer.md)。普通自检、用户验收和独立审查分开记录。
+完整的进程/宿主接入、JSON 协议与升级说明见 [质疑者接入指南](docs/reviewer-integration.md)。程序不验证审查者身份或思考质量；独立会话与权限由宿主/适配器落实，不把提示词或普通进程当成操作系统权限隔离。意见记录不自动等于方案通过、对象关闭或主干采用。
 
 ## 功能演示
 
@@ -115,7 +119,7 @@ Plan 只有进行中、暂停、已结束三个状态，各列独立滚动。尚
 
 ### Windows 安装版
 
-1. 在 [Releases](https://github.com/JingrongZheng/Project-Infra/releases/latest) 下载 `ProjectInfra-0.2.0-Setup.exe`。
+1. 在 [Releases](https://github.com/JingrongZheng/Project-Infra/releases/latest) 下载 `ProjectInfra-0.3.0-Setup.exe`。
 2. 按中文向导选择安装位置，保留“创建桌面快捷方式”。
 3. 双击桌面的 Project Infra，选择已有项目或一个空文件夹。
 4. 空目录经确认后生成项目骨架，看板自动在系统默认浏览器中打开。
@@ -128,7 +132,7 @@ Plan 只有进行中、暂停、已结束三个状态，各列独立滚动。尚
 
 ### Windows 便携版
 
-下载 `project-infra-0.2.0-windows-portable.zip`，解压后双击 `ProjectInfra.exe`。移动时携带整个文件夹，包括 `_internal`。见 [便携说明](docs/portable-use.md)。
+下载 `project-infra-0.3.0-windows-portable.zip`，解压后双击 `ProjectInfra.exe`。移动时携带整个文件夹，包括 `_internal`。见 [便携说明](docs/portable-use.md)。
 
 ## 项目内容放在哪里？
 
@@ -143,7 +147,8 @@ Plan 只有进行中、暂停、已结束三个状态，各列独立滚动。尚
 ├── TOOLKIT.md                   共享模块位置与调用方式索引
 ├── .project/
 │   ├── plans/                   问题、范围、验收与综合判断
-│   └── experiments/             前序、结果、证据与单次结论
+│   ├── experiments/             前序、结果、证据与单次结论
+│   └── reviews/                 各轮原始审查意见与来源元数据
 ├── library/
 │   ├── index.toml               外部资料索引
 │   └── files/                   论文、手册等本地资料
@@ -159,7 +164,7 @@ Plan 只有进行中、暂停、已结束三个状态，各列独立滚动。尚
 
 把项目目录和实际工作目标交给 Agent，让它先读 `AGENTS.md`，再沿设计主干、knowledge/index.md、共享代码索引以及 Plan / Experiment 按需深入。命令行 `context` 可汇集相关脉络和接续说明；未完成对象可用简短 `Continuation` 写清已完成内容、等待对象及继续条件。
 
-便携或安装版会在打开项目时更新 `.work/infra-runtime.md`，供 Agent 定位配套命令行入口。程序不自动调用模型；独立质疑者只在收口检查点按需介入，自动测试、用户验收与独立审查分开记录。
+便携或安装版会在打开项目时更新 `.work/infra-runtime.md`，供 Agent 定位配套命令行入口。Agent 先做当前环境的能力自检；只有显式交付检查点才调用已接入的独立质疑者。自动测试、用户验收与独立审查分开记录。
 
 文件编辑和界面编辑共享校验，陈旧写入会被拒绝，错误文件会显示诊断。验证入口可以保留可重跑命令，但历史实验的验证方法不自动变成后来实验的新验收要求。
 
@@ -185,7 +190,7 @@ python -m project_infra --root examples/document-qa serve --port 8768
 
 - 本地文件工作台；没有云同步或多人远程协作服务。
 - 界面和文件可以编辑关系，尚不支持在画布上拖线编辑。
-- 不自动执行 Agent、安排模型任务或代替独立审查。
+- 不自带模型或任意工具的自动发现器；需要宿主能力握手或配置进程适配器。仅显式交付请求会执行已配置的审查入口。
 - 图片、资料、验证命令与接续说明需要实际维护，系统不会自动补全研究结论。
 
 ## 许可

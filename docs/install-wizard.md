@@ -1,6 +1,6 @@
 # Windows 安装向导试用
 
-双击 dist/ProjectInfra-0.2.0-Setup.exe，按中文向导完成安装。
+双击 dist/ProjectInfra-0.3.0-Setup.exe，按中文向导完成安装。
 
 1. 阅读说明，选择软件安装位置。默认位于当前用户的 LocalAppData\Programs\ProjectInfra，可改为其他可写目录。
 2. 保持“创建桌面快捷方式”勾选，点击安装。

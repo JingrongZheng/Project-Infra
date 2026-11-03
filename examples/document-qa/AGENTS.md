@@ -2,6 +2,8 @@
 
 先读 PROJECT.md、knowledge/index.md 和 TOOLKIT.md，再查看指定 Plan / Experiment 的脉络。看板只是这些项目文件的投影。
 
+开始工作前必须运行 reviewer status 检查当前环境的质疑者能力。若不可用，按 docs/reviewer-integration.md 使用宿主 subagent、独立进程或其他方式完成能力握手；不得自动安装另一套 agent。无法接入时向用户说明质疑功能缺失，运行 reviewer disable 留下原因，继续其他工作。能力自检不等于正式审查；正式审查仅由 deliver <ID>（或兼容的 review --prepare）在交付点发起。
+
 | 需要什么 | 去哪里 |
 |---|---|
 | 当前方案、边界及理由 | PROJECT.md |
@@ -13,7 +15,8 @@
 | 目标与验收要求 | .project/plans/ |
 | 验证命令、指标图表与其他结果展示 | .project/experiments/ |
 | 论文、手册和网页 | library/index.toml |
-| 质疑者初始化与 note | docs/reviewer.md，以及 Plan Review / Experiment Review |
+| 质疑者初始化与往期意见 | docs/reviewer.md、Plan / Experiment Review、.project/reviews/ |
+| 启动自检、接入协议与异常处理 | docs/reviewer-integration.md |
 | 程序结构与操作 | README.md |
 | 验证环境、依赖定位及可直接使用的命令 | docs/verification.md |
 | 便携应用的当前命令行位置 | .work/infra-runtime.md（应用打开项目时更新） |
@@ -25,6 +28,7 @@
 便携版不依赖系统 Python：先读 .work/infra-runtime.md，使用应用目录的 project-infra.exe 调用以下同名子命令。仅 Python 安装版可使用下面的 python -m 写法；找不到 Python 模块时不要重新安装，先确认使用的是哪种入口。
 
 ```sh
+python -m project_infra reviewer status
 python -m project_infra validate
 python -m project_infra search "关键词"
 python -m project_infra context PLAN-0001

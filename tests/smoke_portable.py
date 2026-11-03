@@ -81,6 +81,11 @@ try:
         subprocess.run([shutil.which('node'), str(browser_test), url, str(base / 'portable-ui.png')],
                        env=browser_env, check=True, timeout=30)
     plan = run([cli, '--root', project, 'new', 'plan', '--title', 'Packaged review test fixture'], cwd=project).strip()
+    capability = json.loads(run([cli, '--root', project, 'reviewer', 'probe', '--label', 'packaged host fixture'], cwd=project))
+    request = json.loads((project / capability['request']).read_text(encoding='utf-8'))
+    response = project / capability['response']
+    response.write_text(json.dumps({'nonce': request['nonce'], 'independent': True, 'session': 'fixture-only-not-a-model'}), encoding='utf-8')
+    run([cli, '--root', project, 'reviewer', 'accept', '--response', str(response)], cwd=project)
     handoff = run([cli, '--root', project, 'review', plan, '--prepare'], cwd=project).strip()
     note = project / handoff / 'NOTE.md'
     note.write_text('Reviewer: packaged test fixture, not a real review\n\n## 已核查\nCLI packaging check only.\n\n## 主要疑点\nDoes not establish production method validity.\n', encoding='utf-8')

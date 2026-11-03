@@ -69,7 +69,7 @@ node scripts/capture_demo.cjs
 安装/迁移回归：
 
 ```powershell
-python -X utf8 tests/smoke_portable.py dist/project-infra-0.2.0-windows-portable.zip
+python -X utf8 tests/smoke_portable.py dist/project-infra-0.3.0-windows-portable.zip
 python -X utf8 tests/smoke_installer.py 'Inno Setup目录/ISCC.exe'
 ```
 
@@ -77,4 +77,4 @@ python -X utf8 tests/smoke_installer.py 'Inno Setup目录/ISCC.exe'
 
 ## 当前边界
 
-当前桌面安装包针对 Windows x64 构建；尚未在所有干净机器上验证。源码日常服务无第三方 Python 包依赖，原生桌面入口需要 Tk。未实现云同步、多人远程协作、画布拖线编辑或自动运行 Agent。
+当前桌面安装包针对 Windows x64 构建；尚未在所有干净机器上验证。源码日常服务无第三方 Python 包依赖，原生桌面入口需要 Tk。未实现云同步、多人远程协作、画布拖线编辑；审查接入与调用边界见 reviewer-integration.md。

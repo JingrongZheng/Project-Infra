@@ -6,6 +6,7 @@ from project_infra.bootstrap import initialize
 from project_infra.review import prepare, record
 from project_infra.service import Service
 from project_infra.store import Store, Conflict
+from project_infra import reviewer_runtime as runtime
 
 
 class ProjectCoreTests(unittest.TestCase):
@@ -17,6 +18,9 @@ class ProjectCoreTests(unittest.TestCase):
         self.service = Service(self.store)
         self.plan = self.service.create('plan', 'test exploration')
         self.exp = self.service.create('experiment', 'test attempt', self.plan)
+        runtime.probe(self.store, 'test-only host fixture', timeout=120)
+        runtime.accept(self.store, {'nonce': runtime.read(self.store)['nonce'], 'independent': True,
+                                   'session': 'fixture-session-not-a-real-review'})
 
     def update(self, ident, fields=None, sections=None):
         doc = self.service.checked()[0][ident]
