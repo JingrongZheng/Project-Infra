@@ -35,7 +35,9 @@ class Fixture(unittest.TestCase):
         return self.service.update(doc.path, doc.revision, fields, sections)
 
     def plan(self):
-        return self.service.create('plan', '能否可靠接续探索？')
+        ident = self.service.create('plan', '能否可靠接续探索？')
+        self.update(ident, sections={'Execution plan': '- [x] **共享实现整理**：结果：对象结构测试夹具无业务实现；不代表真实项目整理完成。'})
+        return ident
 
 
 class ProjectTests(Fixture):

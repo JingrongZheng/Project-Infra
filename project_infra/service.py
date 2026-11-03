@@ -39,6 +39,8 @@ class Service:
             candidate = Document(path, text, '') if old else None
             if (old and kind_of(old) == 'plan' and old.meta.get('status') != 'closed'
                     and candidate.meta.get('status') == 'closed' and candidate.meta.get('resolution') != 'abandoned'):
+                from .execution import require_shared_step
+                require_shared_step(candidate)
                 from .review import require_delivery
                 from .reviewer_runtime import status
                 message = require_delivery(self, old.meta['id'])

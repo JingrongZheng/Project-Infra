@@ -25,6 +25,8 @@ class ReviewerRuntimeTests(unittest.TestCase):
         initialize(self.store)
         self.service = Service(self.store)
         self.plan = self.service.create('plan', 'Test delivery')
+        fixture_plan = self.service.checked()[0][self.plan]
+        self.service.update(fixture_plan.path, fixture_plan.revision, sections={'Execution plan': '- [x] **共享实现整理**：结果：测试夹具没有业务实现需要抽取；不代表真实项目整理完成。'})
 
     def host(self, timeout=120):
         runtime.probe(self.store, 'host fixture', timeout=timeout)

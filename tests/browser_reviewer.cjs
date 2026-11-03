@@ -17,6 +17,10 @@ function cli(...args){return execFileSync(process.env.INFRA_TEST_PYTHON||'python
   await page.goto(url);await page.waitForFunction(()=>document.querySelector('#reviewer-capability').textContent.includes('已关闭'));
   await page.addStyleTag({content:'#root{visibility:hidden}'});
   await page.screenshot({path:path.join(dest,'reviewer-disabled.png')});
+  const currentSteps=await page.evaluate(()=>state.objects.find(o=>o.meta.id==='PLAN-0001').sections['Execution plan']);
+  const preparedSteps=(currentSteps||'').replace(/^\s*[-+*] \[[ xX]\] \*\*共享实现整理\*\*.*$/gm,'').trim()+'\n- [x] **共享实现整理**：结果：UI 协议夹具不修改业务代码，不代表真实项目整理完成。';
+  cli('edit','PLAN-0001','--section','Execution plan','--text',preparedSteps);
+  await page.evaluate(()=>refresh());
   await page.evaluate(()=>showObject('PLAN-0001'));
   await page.getByRole('button',{name:'交付检查 · 无独立审查'}).click();
   await page.waitForFunction(()=>document.querySelector('#detail-content').textContent.includes('未执行独立审查'));

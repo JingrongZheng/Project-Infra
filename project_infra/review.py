@@ -34,6 +34,9 @@ def prepare(service, ident):
         raise ValueError('Review requires a Plan or Experiment')
     if docs[ident].meta.get('status') == 'closed':
         raise ValueError('Reopen the object before starting another delivery review')
+    if kind_of(docs[ident]) == 'plan':
+        from .execution import require_shared_step
+        require_shared_step(docs[ident])
     folder = service.store.path(f'.work/reviews/{ident}/{uuid.uuid4().hex[:12]}')
     deadline = time.time() + runtime.read(service.store)['timeout']
     active_path = f'.work/reviewer/active/{ident}.json'
@@ -140,6 +143,9 @@ def deliver(service, ident):
         raise ValueError('\n'.join(errors) or 'Delivery requires a Plan or Experiment')
     if docs[ident].meta.get('status') == 'closed':
         raise ValueError('Reopen the object before starting another delivery review')
+    if kind_of(docs[ident]) == 'plan':
+        from .execution import require_shared_step
+        require_shared_step(docs[ident])
     capability = runtime.status(service.store)
     if not capability.get('enabled'):
         message = '未执行独立审查：' + capability['reason']

@@ -123,6 +123,10 @@ def validate(store, docs, overrides=None):
             if status != 'closed' and 'resolution' in m:
                 error(doc.path, 'Only closed Plans have a resolution')
             if status == 'closed':
+                if m.get('resolution') != 'abandoned':
+                    from .execution import shared_step_error
+                    if issue := shared_step_error(doc):
+                        error(doc.path, issue)
                 if m.get('resolution') not in RESOLUTIONS:
                     error(doc.path, 'Closed Plan needs a valid resolution')
                 if not doc.section('Synthesis'):

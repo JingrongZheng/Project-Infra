@@ -47,9 +47,22 @@ Experiment 保留当时做了什么、观察到什么、为什么继续或放弃
 
 ### 共享代码属于项目，不属于某次 Experiment
 
-Plan 的 `Execution plan` 是围绕当前探索目标的动态执行计划，随着 Experiment 的发现补充、调整或删除 steps，不要求开始时列全。制定或更新计划时，把适用的共享代码复用、抽取与整理工作安排进合适的 steps，按需包含相关重跑与索引更新；不为每个实验重复设置固定整理流程，也不统一拖到最后。`context EXP-…` 会带入所属 Plan 的当前执行计划，接手者不必依赖上次聊天。
+Plan 的 `Execution plan` 围绕探索目标组织动态 steps，随 Experiment 的发现补充、调整或删除。新建 Plan 时，程序会实际生成一项未完成的共享实现整理步骤：
 
-这属于执行计划中的工作约定，不增加步骤调度器或新对象状态，也不自动识别、抽取重复代码。
+```markdown
+- [ ] **共享实现整理**：检查本 Plan 产生或依赖的实现，处理共享模块、索引与相关重跑。
+```
+
+执行 Agent 根据探索情况调整这一步的位置与范围，实际完成工作后勾选，并记录具体处理；例如：
+
+```markdown
+- [x] **共享实现整理**：检查本轮实现。
+  结果：将指标计算抽到 shared/metrics.py，两个实验改为导入调用；更新 TOOLKIT.md，重跑两个入口结果一致。
+```
+
+无需抽取时也要写明原因。程序会拒绝非放弃 Plan 在这一步缺失、未完成或没有结果记录时发起交付或结束；此校验由 CLI、Web 和文件 validate 共用。普通 Experiment 结束不重复要求这项工作。
+
+整理由执行 Agent 实际完成，程序控制步骤与结果记录的要求。Plan 的其他 steps 仍由本次目标与验收决定；不把整份执行计划替换成代码整理清单。`context EXP-…` 会带入所属 Plan 的当前执行计划与结果。
 
 共享逻辑从实验里抽出，进入项目级模块；实验只组织输入、参数、调用和产物。共享模块不能反向依赖某个实验目录，清理实验也不应删除共享能力。
 
@@ -125,7 +138,7 @@ Plan 只有进行中、暂停、已结束三个状态，各列独立滚动。尚
 
 ### Windows 安装版
 
-1. 在 [Releases](https://github.com/JingrongZheng/Project-Infra/releases/latest) 下载 `ProjectInfra-0.3.1-Setup.exe`。
+1. 在 [Releases](https://github.com/JingrongZheng/Project-Infra/releases/latest) 下载 `ProjectInfra-0.3.2-Setup.exe`。
 2. 按中文向导选择安装位置，保留“创建桌面快捷方式”。
 3. 双击桌面的 Project Infra，选择已有项目或一个空文件夹。
 4. 空目录经确认后生成项目骨架，看板自动在系统默认浏览器中打开。
@@ -138,7 +151,7 @@ Plan 只有进行中、暂停、已结束三个状态，各列独立滚动。尚
 
 ### Windows 便携版
 
-下载 `project-infra-0.3.1-windows-portable.zip`，解压后双击 `ProjectInfra.exe`。移动时携带整个文件夹，包括 `_internal`。见 [便携说明](docs/portable-use.md)。
+下载 `project-infra-0.3.2-windows-portable.zip`，解压后双击 `ProjectInfra.exe`。移动时携带整个文件夹，包括 `_internal`。见 [便携说明](docs/portable-use.md)。
 
 ## 项目内容放在哪里？
 

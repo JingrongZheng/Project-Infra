@@ -130,8 +130,9 @@ def template(kind, ident, title):
     text = '+++\n' + '\n'.join(f'{k} = {scalar(v)}' for k, v in meta.items()) + '\n+++\n\n' + \
         '\n\n'.join(f'## {s}\n' for s in SECTIONS[kind]) + '\n'
     if kind == 'plan':
+        from .execution import SHARED_STEP_TEMPLATE
         text = Document('', text, '').patch(sections={'Execution plan':
             '围绕本次目标、边界与验收要求组织当前已知的 steps；随 Experiment 的发现补充、调整或删除，不要求一开始列全。\n\n'
-            '制定或更新计划时，结合实际安排共享代码的复用、抽取与整理，写明涉及的模块或待判断事项及合适时机；'
-            '需要时安排相关入口的重跑与 TOOLKIT.md 更新。它是整体执行计划中的工作，不为每个 Experiment 重复设置固定流程，也不统一拖到最后。'})
+            '在下面的必要整理步骤前后补入本次探索的具体工作；不要把整个计划写成代码整理清单。\n\n'
+            + SHARED_STEP_TEMPLATE})
     return text

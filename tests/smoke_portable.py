@@ -82,8 +82,16 @@ try:
                        env=browser_env, check=True, timeout=30)
     plan = run([cli, '--root', project, 'new', 'plan', '--title', 'Packaged review test fixture'], cwd=project).strip()
     assert '## Execution plan' in (project / '.project/plans' / (plan + '.md')).read_text(encoding='utf-8')
+    original_plan = (project / '.project/plans' / (plan + '.md')).read_bytes()
+    assert '- [ ] **共享实现整理**' in original_plan.decode('utf-8')
+    for attempt in ([cli, '--root', project, 'deliver', plan],
+                    [cli, '--root', project, 'close', plan, '--resolution', 'inconclusive']):
+        blocked = subprocess.run(list(map(str, attempt)), cwd=project, env=env, capture_output=True,
+                                 text=True, encoding='utf-8', timeout=30)
+        assert blocked.returncode != 0 and '共享实现整理' in blocked.stderr, blocked.stdout + blocked.stderr
+        assert (project / '.project/plans' / (plan + '.md')).read_bytes() == original_plan
     exp = run([cli, '--root', project, 'new', 'experiment', '--plan', plan, '--title', 'Packaged dynamic plan fixture'], cwd=project).strip()
-    run([cli, '--root', project, 'edit', plan, '--section', 'Execution plan', '--text', 'PACKAGED_CURRENT_STEPS: update after exploration; reuse the project shared module when applicable.'], cwd=project)
+    run([cli, '--root', project, 'edit', plan, '--section', 'Execution plan', '--text', 'PACKAGED_CURRENT_STEPS: update after exploration.\n- [x] **共享实现整理**：结果：打包协议夹具无业务实现，不代表真实整理。'], cwd=project)
     assert 'PACKAGED_CURRENT_STEPS' in run([cli, '--root', project, 'context', exp], cwd=project)
     capability = json.loads(run([cli, '--root', project, 'reviewer', 'probe', '--label', 'packaged host fixture'], cwd=project))
     request = json.loads((project / capability['request']).read_text(encoding='utf-8'))
