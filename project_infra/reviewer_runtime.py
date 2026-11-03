@@ -23,7 +23,7 @@ RUNTIME = '.work/reviewer/runtime.json'
 
 def environment(store):
     return digest(json.dumps([platform.node(), getpass.getuser(), str(store.root),
-                              str(Path(sys.executable).resolve()), __version__]).encode())
+                              str(Path(sys.executable).resolve().parent), __version__]).encode())
 
 
 def read(store):

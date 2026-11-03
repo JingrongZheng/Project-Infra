@@ -83,6 +83,15 @@ class ReviewerRuntimeTests(unittest.TestCase):
         server.server_close()
         self.assertFalse(runtime.status(self.store)['enabled'])
 
+    def test_gui_and_cli_in_one_installation_share_capability(self):
+        install = self.store.root / 'application'
+        with patch('sys.executable', str(install / 'project-infra.exe')):
+            self.host()
+        with patch('sys.executable', str(install / 'ProjectInfra.exe')):
+            self.assertTrue(runtime.status(self.store)['enabled'])
+        with patch('sys.executable', str(self.store.root / 'other-install' / 'project-infra.exe')):
+            self.assertFalse(runtime.status(self.store)['enabled'])
+
     def test_host_delivery_waits_for_actual_note_and_blocks_duplicate(self):
         self.host()
         result = deliver(self.service, self.plan)

@@ -86,6 +86,8 @@ try:
     response = project / capability['response']
     response.write_text(json.dumps({'nonce': request['nonce'], 'independent': True, 'session': 'fixture-only-not-a-model'}), encoding='utf-8')
     run([cli, '--root', project, 'reviewer', 'accept', '--response', str(response)], cwd=project)
+    capability_data = json.loads((project / '.work/reviewer/runtime.json').read_text(encoding='utf-8'))
+    assert capability_data['environment'] == data['reviewer_environment'], 'GUI and CLI in the same installation must share environment identity'
     handoff = run([cli, '--root', project, 'review', plan, '--prepare'], cwd=project).strip()
     note = project / handoff / 'NOTE.md'
     note.write_text('Reviewer: packaged test fixture, not a real review\n\n## 已核查\nCLI packaging check only.\n\n## 主要疑点\nDoes not establish production method validity.\n', encoding='utf-8')
