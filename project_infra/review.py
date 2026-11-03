@@ -95,7 +95,8 @@ def record(service, ident, relative_note):
     embedded = f'### 审查轮次 {manifest["round"]} · {stamp}\n\n' + embedded
     embedded += '\n\n审查依据指纹：' + manifest['fingerprint'] + '\n原始意见：' + archive
     previous = target.section('Review').strip()
-    text = target.patch(sections={'Review': (previous + '\n\n' if previous else '') + embedded})
+    text = target.patch(sections={'Review': (previous + '\n\n' if previous else '') + embedded,
+        'Delivery': f'本轮独立审查意见已记录：{manifest["round"]}。不代表方案通过或已被采纳。'})
     with service.store.locked():
         if manifest['fingerprint'] != service.store.fingerprint():
             raise Conflict('Project content changed during review; prepare a fresh handoff')

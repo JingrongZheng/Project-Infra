@@ -93,6 +93,7 @@ class ReviewerRuntimeTests(unittest.TestCase):
             self.assertFalse(runtime.status(self.store)['enabled'])
 
     def test_host_delivery_waits_for_actual_note_and_blocks_duplicate(self):
+        deliver(self.service, self.plan)  # Earlier degraded delivery must not remain the latest label.
         self.host()
         result = deliver(self.service, self.plan)
         self.assertTrue(result['pending'])
@@ -101,6 +102,7 @@ class ReviewerRuntimeTests(unittest.TestCase):
             deliver(self.service, self.plan)
         self.write_note(result['handoff'])
         self.assertEqual(len(history(self.store, self.plan)), 1)
+        self.assertNotIn('未执行独立审查', self.service.checked()[0][self.plan].section('Delivery'))
 
     def test_two_rounds_survive_work_cleanup_and_both_enter_context(self):
         self.host()
