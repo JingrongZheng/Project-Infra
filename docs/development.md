@@ -69,7 +69,7 @@ node scripts/capture_demo.cjs
 安装/迁移回归：
 
 ```powershell
-python -X utf8 tests/smoke_portable.py dist/project-infra-0.3.0-windows-portable.zip
+python -X utf8 tests/smoke_portable.py dist/project-infra-0.3.1-windows-portable.zip
 python -X utf8 tests/smoke_installer.py 'Inno Setup目录/ISCC.exe'
 ```
 

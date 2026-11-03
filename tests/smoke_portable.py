@@ -81,6 +81,10 @@ try:
         subprocess.run([shutil.which('node'), str(browser_test), url, str(base / 'portable-ui.png')],
                        env=browser_env, check=True, timeout=30)
     plan = run([cli, '--root', project, 'new', 'plan', '--title', 'Packaged review test fixture'], cwd=project).strip()
+    assert '## Execution plan' in (project / '.project/plans' / (plan + '.md')).read_text(encoding='utf-8')
+    exp = run([cli, '--root', project, 'new', 'experiment', '--plan', plan, '--title', 'Packaged dynamic plan fixture'], cwd=project).strip()
+    run([cli, '--root', project, 'edit', plan, '--section', 'Execution plan', '--text', 'PACKAGED_CURRENT_STEPS: update after exploration; reuse the project shared module when applicable.'], cwd=project)
+    assert 'PACKAGED_CURRENT_STEPS' in run([cli, '--root', project, 'context', exp], cwd=project)
     capability = json.loads(run([cli, '--root', project, 'reviewer', 'probe', '--label', 'packaged host fixture'], cwd=project))
     request = json.loads((project / capability['request']).read_text(encoding='utf-8'))
     response = project / capability['response']

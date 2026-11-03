@@ -65,6 +65,17 @@ Need actual review before any real delivery.
         self.assertIn('PRIOR_CONCLUSION', text)
         self.assertIn('PRIOR_REVIEW_NOTE', text)
 
+    def test_experiment_context_follows_updated_parent_execution_plan(self):
+        self.update(self.plan, sections={'Execution plan': '1. Compare candidate inputs.\n2. Reuse shared/metrics.py before parallel validation.'})
+        first = self.service.context(self.exp)
+        self.assertIn('Compare candidate inputs.', first)
+        self.assertIn('shared/metrics.py', first)
+        self.update(self.plan, sections={'Execution plan': '1. New evidence: defer parallel validation.\n2. Extract the confirmed shared entry before the next batch.'})
+        current = self.service.context(self.exp)
+        self.assertIn('New evidence: defer', current)
+        self.assertNotIn('Compare candidate inputs.', current)
+        self.assertEqual(self.service.checked()[0][self.exp].section('Execution plan'), '')
+
     def test_prepare_does_not_fabricate_review_and_empty_note_is_rejected(self):
         folder = prepare(self.service, self.plan)
         self.assertIn('不声称已建立沙箱', self.store.path(folder + '/context.md').read_text(encoding='utf-8'))

@@ -200,6 +200,8 @@ class Service:
                               f'File: {item.path}; status: {item.meta.get("status", "—")}')
                 if item.section('Continuation').strip():
                     chunks.append('Continuation: ' + item.section('Continuation'))
+                if kind_of(item) == 'plan' and item.section('Execution plan').strip():
+                    chunks.append('Execution plan: ' + item.section('Execution plan'))
                 if reviewer:
                     for section_name in ('Conclusion', 'Verification', 'Review'):
                         if item.section(section_name).strip():

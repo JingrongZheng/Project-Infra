@@ -115,7 +115,7 @@ STATES = {'proposal': [], 'plan': ['active', 'paused', 'closed'],
           'experiment': ['draft', 'active', 'closed']}
 RESOLUTIONS = ['supported', 'refuted', 'inconclusive', 'abandoned']
 SECTIONS = {'proposal': ['Direction'],
-            'plan': ['Question', 'Scope', 'Stop conditions', 'Acceptance criteria', 'Synthesis', 'Review'],
+            'plan': ['Question', 'Scope', 'Stop conditions', 'Acceptance criteria', 'Execution plan', 'Synthesis', 'Review'],
             'experiment': ['Approach', 'Notes', 'Results', 'Verification', 'Conclusion', 'Review']}
 
 
@@ -127,5 +127,11 @@ def template(kind, ident, title):
         meta.update(experiments=[], follow_up_plans=[], project_docs_updated=[])
     if kind == 'experiment':
         meta.update(predecessors=[], verify=[], evidence=[])
-    return '+++\n' + '\n'.join(f'{k} = {scalar(v)}' for k, v in meta.items()) + '\n+++\n\n' + \
+    text = '+++\n' + '\n'.join(f'{k} = {scalar(v)}' for k, v in meta.items()) + '\n+++\n\n' + \
         '\n\n'.join(f'## {s}\n' for s in SECTIONS[kind]) + '\n'
+    if kind == 'plan':
+        text = Document('', text, '').patch(sections={'Execution plan':
+            '围绕本次目标、边界与验收要求组织当前已知的 steps；随 Experiment 的发现补充、调整或删除，不要求一开始列全。\n\n'
+            '制定或更新计划时，结合实际安排共享代码的复用、抽取与整理，写明涉及的模块或待判断事项及合适时机；'
+            '需要时安排相关入口的重跑与 TOOLKIT.md 更新。它是整体执行计划中的工作，不为每个 Experiment 重复设置固定流程，也不统一拖到最后。'})
+    return text

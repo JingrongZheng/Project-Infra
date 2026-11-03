@@ -15,7 +15,7 @@ Project Infra 是一套面向探索型开发、研究项目和 Vibe Coding 的�
 | 内容 | 职责与存放位置 |
 |---|---|
 | 当前设计主干 | `PROJECT.md`：正式采用的总体设计、边界和采用依据 |
-| 探索组织 | Plan：问题、范围、实验脉络、停止条件和综合判断 |
+| 探索组织 | Plan：问题、范围、动态执行计划、实验脉络、停止条件和综合判断 |
 | 具体尝试 | Experiment：前序、实现入口、实际结果、单次结论和证据 |
 | 长期知识 | `knowledge/`：提炼后的可复用结论、负面发现与适用边界，链接来源实验 |
 | 共享实现 | `shared/` 或项目已有 `src/` 包：真实代码和工具文件，独立于实验生命周期 |
@@ -44,6 +44,12 @@ Experiment 保留当时做了什么、观察到什么、为什么继续或放弃
 `knowledge/index.md` 负责导航，`PROJECT.md` 引用与当前设计有关的知识。上下文默认读索引，只展开目标 Plan 的 `project_docs_updated`、Experiment 的 `artifacts_promoted` 明确关联的知识文件。没有增加 Knowledge 对象状态机或单独的历史层。
 
 ### 共享代码属于项目，不属于某次 Experiment
+
+Plan 的 `Execution plan` 是围绕当前探索目标的动态执行计划，随着 Experiment 的发现补充、调整或删除 steps，不要求开始时列全。制定或更新计划时，把适用的共享代码复用、抽取与整理工作安排进合适的 steps，按需包含相关重跑与索引更新；不为每个实验重复设置固定整理流程，也不统一拖到最后。`context EXP-…` 会带入所属 Plan 的当前执行计划，接手者不必依赖上次聊天。
+
+这属于执行计划中的工作约定，不增加步骤调度器或新对象状态，也不自动识别、抽取重复代码。
+
+升级时已有 AGENTS.md 和 Plan 会保留，不自动覆盖；将上述指引合并到已有 AGENTS.md，并按需给现有 Plan 添加 `Execution plan` 小节。新建 Plan 会直接使用新模板。
 
 共享逻辑从实验里抽出，进入项目级模块；实验只组织输入、参数、调用和产物。共享模块不能反向依赖某个实验目录，清理实验也不应删除共享能力。
 
@@ -119,7 +125,7 @@ Plan 只有进行中、暂停、已结束三个状态，各列独立滚动。尚
 
 ### Windows 安装版
 
-1. 在 [Releases](https://github.com/JingrongZheng/Project-Infra/releases/latest) 下载 `ProjectInfra-0.3.0-Setup.exe`。
+1. 在 [Releases](https://github.com/JingrongZheng/Project-Infra/releases/latest) 下载 `ProjectInfra-0.3.1-Setup.exe`。
 2. 按中文向导选择安装位置，保留“创建桌面快捷方式”。
 3. 双击桌面的 Project Infra，选择已有项目或一个空文件夹。
 4. 空目录经确认后生成项目骨架，看板自动在系统默认浏览器中打开。
@@ -132,7 +138,7 @@ Plan 只有进行中、暂停、已结束三个状态，各列独立滚动。尚
 
 ### Windows 便携版
 
-下载 `project-infra-0.3.0-windows-portable.zip`，解压后双击 `ProjectInfra.exe`。移动时携带整个文件夹，包括 `_internal`。见 [便携说明](docs/portable-use.md)。
+下载 `project-infra-0.3.1-windows-portable.zip`，解压后双击 `ProjectInfra.exe`。移动时携带整个文件夹，包括 `_internal`。见 [便携说明](docs/portable-use.md)。
 
 ## 项目内容放在哪里？
 
