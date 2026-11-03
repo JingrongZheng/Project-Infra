@@ -31,6 +31,8 @@ class ProjectionCache:
 
 
 def make_server(service, port=8765):
+    from .review_lock import recover
+    recover(service.store, 'workbench-restart')
     from .reviewer_runtime import disable
     disable(service.store, '工作台新会话尚未接入独立质疑者，请执行启动自检；质疑功能已关闭')
     token = secrets.token_urlsafe(24)
@@ -143,7 +145,15 @@ def make_server(service, port=8765):
             except (ValueError, OSError, KeyError, TypeError) as exc:
                 self.respond(400, {'error': str(exc)})
 
-    server = ThreadingHTTPServer(('127.0.0.1', port), Handler)
+    class ProjectServer(ThreadingHTTPServer):
+        def server_close(self):
+            try:
+                super().server_close()
+            finally:
+                from .review_lock import recover
+                recover(service.store, 'workbench-stopped')
+
+    server = ProjectServer(('127.0.0.1', port), Handler)
     server.daemon_threads = True
     return server
 
@@ -158,3 +168,5 @@ def serve(service, port):
         pass
     finally:
         server.server_close()
+        from .review_lock import recover
+        recover(service.store, 'workbench-stopped')

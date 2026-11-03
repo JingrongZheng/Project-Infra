@@ -33,6 +33,9 @@ function cli(...args){return execFileSync(process.env.INFRA_TEST_PYTHON||'python
   await page.waitForFunction(()=>document.querySelector('#reviewer-capability').textContent.includes('质疑者可用'));
   await page.getByRole('button',{name:'发起交付审查'}).click();
   await page.waitForFunction(()=>document.querySelector('#toast').textContent.includes('独立会话'));
+  await page.waitForFunction(()=>state.reviewer.project_readonly&&document.querySelector('#new').disabled);
+  assert(await page.getByRole('button',{name:'编辑内容',exact:true}).isDisabled());
+  assert.throws(()=>fs.writeFileSync(path.join(root,'forbidden-write.txt'),'bad'));
   assert.equal(fs.existsSync(historyDir)?fs.readdirSync(historyDir).length:0,before,'Pending review must not be completed');
   const active=JSON.parse(fs.readFileSync(path.join(root,'.work/reviewer/active/PLAN-0001.json'),'utf8'));
   const round=path.basename(active.archive,'.md');
@@ -41,6 +44,8 @@ function cli(...args){return execFileSync(process.env.INFRA_TEST_PYTHON||'python
   cli('review','PLAN-0001','--record',note);
   await page.evaluate(()=>refresh());
   await page.waitForFunction(()=>document.querySelector('#detail-content').textContent.includes('browser fixture'));
+  assert.equal(await page.getByRole('button',{name:'编辑内容',exact:true}).isEnabled(),true);
+  fs.writeFileSync(path.join(root,'.work/review-restored-proof.txt'),'writing restored');
   assert(fs.existsSync(path.join(root,active.archive)));
   await page.locator('[data-section="Review"]').scrollIntoViewIfNeeded();
   await page.screenshot({path:path.join(dest,'reviewer-round.png')});

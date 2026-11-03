@@ -95,6 +95,8 @@ class ProjectSessions:
                 server, thread, _ = session
                 server.shutdown()
                 server.server_close()
+                from .review_lock import recover
+                recover(Store(target), 'workbench-stopped')
                 thread.join(timeout=3)
 
 

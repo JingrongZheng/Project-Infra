@@ -2,7 +2,7 @@
 
 An adapter implements probe/review JSON over stdin/stdout. Host agents can perform
 the same handshake without a subprocess. Independence is a declared capability,
-not an attempt to prove the honesty of an agent or enforce an OS security boundary.
+not an attempt to prove agent honesty. Project write protection is implemented in review_lock.
 """
 import getpass
 import json
@@ -42,6 +42,8 @@ def save(store, data):
 
 
 def disable(store, reason='当前环境尚未完成质疑者能力自检'):
+    from .review_lock import recover
+    recover(store, 'cancel')
     data = {'enabled': False, 'reason': reason, 'environment': environment(store),
             'runtime_id': uuid.uuid4().hex, 'expires': 0}
     save(store, data)
@@ -50,6 +52,8 @@ def disable(store, reason='当前环境尚未完成质疑者能力自检'):
 
 def status(store):
     try:
+        from .review_lock import reap, active as freeze_active
+        reap(store)
         data = read(store)
         if data.get('environment') != environment(store):
             return {'enabled': False, 'reason': '当前运行环境未自检，质疑功能已关闭'}
@@ -60,14 +64,23 @@ def status(store):
         for active in store.path('.work/reviewer/active').glob('*.json'):
             pending = json.loads(active.read_text(encoding='utf-8'))
             if (pending.get('runtime_id') == data.get('runtime_id') and pending['deadline'] <= time.time()
-                    and not store.path(pending['archive']).exists()):
+                    and not pending.get('finished') and not store.path(pending['archive']).exists()):
                 return {'enabled': False, 'reason': '本轮审查超时；质疑功能已关闭，未记为完成'}
-        return {k: data[k] for k in ('enabled', 'reason', 'mode', 'label', 'expires', 'runtime_id') if k in data}
-    except (ValueError, OSError, TypeError, KeyError, AttributeError):
-        return {'enabled': False, 'reason': '能力记录不可读，质疑功能已关闭'}
+        return {**{k: data[k] for k in ('enabled', 'reason', 'mode', 'label', 'expires', 'runtime_id') if k in data},
+                'project_readonly': freeze_active(store)}
+    except (ValueError, OSError, TypeError, KeyError, AttributeError) as exc:
+        try:
+            readonly = freeze_active(store)
+        except (ValueError, OSError, KeyError, TypeError):
+            readonly = True
+        return {'enabled': False, 'reason': '审查状态检查失败：' + str(exc), 'project_readonly': readonly}
 
 
 def probe(store, label, command=None, timeout=120):
+    from .winacl import ACL
+    protection = ACL()
+    protection.check_volume(store.root)
+    protection.check_can_change(store.root)
     if not label.strip() or not 1 <= timeout <= 3600:
         raise ValueError('Provide a reviewer label and a timeout between 1 and 3600 seconds')
     if command is not None and (not isinstance(command, list) or not command or
@@ -120,8 +133,20 @@ def invoke(store, data, request, folder):
     destination = store.path(folder)
     destination.mkdir(parents=True, exist_ok=True)
     kwargs = {'creationflags': subprocess.CREATE_NEW_PROCESS_GROUP | subprocess.CREATE_NO_WINDOW} if os.name == 'nt' else {'start_new_session': True}
+    environment = None
+    if request.get('action') == 'review':
+        environment = dict(os.environ, TEMP=str(destination / 'checks'), TMP=str(destination / 'checks'),
+                           TMPDIR=str(destination / 'checks'), GIT_OPTIONAL_LOCKS='0')
     process = subprocess.Popen(data['command'], cwd=store.root, stdin=subprocess.PIPE,
-                               stdout=subprocess.PIPE, stderr=subprocess.PIPE, **kwargs)
+                               stdout=subprocess.PIPE, stderr=subprocess.PIPE, env=environment, **kwargs)
+    if request.get('action') == 'review':
+        from .review_lock import register_child
+        try:
+            register_child(store, process.pid)
+        except BaseException:
+            process.kill()
+            process.communicate()
+            raise
     try:
         out, err = process.communicate(json.dumps(request, ensure_ascii=False).encode('utf-8'),
                                        timeout=data['timeout'])
@@ -138,6 +163,10 @@ def invoke(store, data, request, folder):
         raise ValueError('Reviewer process timed out; no review was recorded')
     (destination / 'stdout.log').write_bytes(out)
     (destination / 'stderr.log').write_bytes(err)
+    if request.get('action') == 'review':
+        from .review_lock import read as protection_record
+        if protection_record(store).get('release_reason') == 'timeout':
+            raise ValueError('Reviewer process timed out; project permissions restored')
     if process.returncode:
         raise ValueError(f'Reviewer process exited with code {process.returncode}; see {folder}/stderr.log')
     try:

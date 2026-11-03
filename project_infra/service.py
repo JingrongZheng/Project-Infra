@@ -118,6 +118,8 @@ class Service:
             return ident
 
     def execute(self, ident, verification=False):
+        from .review_lock import assert_writable
+        assert_writable(self.store)
         docs, errors = self.checked()
         if errors:
             raise ValueError('\n'.join(errors))

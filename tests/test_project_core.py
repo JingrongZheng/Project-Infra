@@ -15,6 +15,8 @@ class ProjectCoreTests(unittest.TestCase):
         self.addCleanup(self.temp.cleanup)
         self.store = Store(self.temp.name)
         initialize(self.store)
+        from project_infra.review_lock import recover
+        self.addCleanup(recover, self.store, "test-cleanup")
         self.service = Service(self.store)
         self.plan = self.service.create('plan', 'test exploration')
         fixture_plan = self.service.checked()[0][self.plan]
@@ -80,7 +82,7 @@ Need actual review before any real delivery.
 
     def test_prepare_does_not_fabricate_review_and_empty_note_is_rejected(self):
         folder = prepare(self.service, self.plan)
-        self.assertIn('不声称已建立沙箱', self.store.path(folder + '/context.md').read_text(encoding='utf-8'))
+        self.assertIn('冻结项目写权限', self.store.path(folder + '/context.md').read_text(encoding='utf-8'))
         self.assertEqual(self.service.checked()[0][self.plan].section('Review'), '')
         with self.assertRaises(ValueError):
             record(self.service, self.plan, folder + '/NOTE.md')
@@ -94,19 +96,22 @@ Need actual review before any real delivery.
         self.assertEqual(doc.section('主要疑点'), '')
         self.assertEqual(doc.meta['status'], 'active')
 
-    def test_review_is_rejected_if_source_changed(self):
+    def test_review_blocks_source_changes_and_rejects_cancelled_handoff(self):
         folder = prepare(self.service, self.plan)
         path = self.filled_note(folder)
+        with self.assertRaises(PermissionError):
+            self.store.path('shared/metrics.py').write_text('def score(): return 1\n')
+        runtime.disable(self.store, 'cancel fixture review')
         self.store.path('shared/metrics.py').write_text('def score(): return 1\n')
-        with self.assertRaises(Conflict):
+        with self.assertRaises(ValueError):
             record(self.service, self.plan, path)
         self.assertEqual(self.service.checked()[0][self.plan].section('Review'), '')
 
     def test_review_from_different_target_or_arbitrary_note_is_rejected(self):
+        self.store.path('random.md').write_text('Not a prepared review')
         folder = prepare(self.service, self.plan)
         path = self.filled_note(folder)
         with self.assertRaises(ValueError):
             record(self.service, self.exp, path)
-        self.store.path('random.md').write_text('Not a prepared review')
         with self.assertRaises(ValueError):
             record(self.service, self.plan, 'random.md')

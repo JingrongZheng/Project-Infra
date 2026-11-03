@@ -47,6 +47,8 @@ def main(argv=None):
     p.add_argument('--reason', default='当前环境未接入独立审查会话')
     p = sub.add_parser('deliver', help='Explicit delivery checkpoint; invoke review only here')
     p.add_argument('id')
+    p = sub.add_parser('_review-watchdog', help=argparse.SUPPRESS)
+    p.add_argument('round')
     p = sub.add_parser('new')
     p.add_argument('kind', choices=KINDS)
     p.add_argument('--title', required=True)
@@ -86,6 +88,12 @@ def main(argv=None):
     try:
         store = Store(project_root(args.root, initializing=args.command == 'init'))
         service = Service(store)
+        if args.command == '_review-watchdog':
+            from .review_lock import watch
+            from .desktop import application_mutex
+            with application_mutex():
+                watch(store, args.round)
+            return 0
         if args.command == 'init':
             print('\n'.join(initialize(store)) or 'Existing files preserved.')
             return 0

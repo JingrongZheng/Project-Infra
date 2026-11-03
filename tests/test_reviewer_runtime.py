@@ -23,6 +23,8 @@ class ReviewerRuntimeTests(unittest.TestCase):
         self.addCleanup(self.temp.cleanup)
         self.store = Store(self.temp.name)
         initialize(self.store)
+        from project_infra.review_lock import recover
+        self.addCleanup(recover, self.store, "test-cleanup")
         self.service = Service(self.store)
         self.plan = self.service.create('plan', 'Test delivery')
         fixture_plan = self.service.checked()[0][self.plan]
@@ -138,13 +140,10 @@ class ReviewerRuntimeTests(unittest.TestCase):
         self.assertIn('Legacy v0.2 finding', self.service.context(self.plan, reviewer=True))
 
     def test_host_review_timeout_and_capability_reset_reject_notes(self):
-        self.host()
+        self.host(timeout=1)
         folder = deliver(self.service, self.plan)['handoff']
         self.store.path(folder + '/NOTE.md').write_text(NOTE, encoding='utf-8')
-        manifest_path = self.store.path(folder + '/manifest.json')
-        manifest = json.loads(manifest_path.read_text())
-        manifest['deadline'] = time.time() - 1
-        manifest_path.write_text(json.dumps(manifest))
+        time.sleep(1.5)
         with self.assertRaises(ValueError):
             record(self.service, self.plan, folder + '/NOTE.md')
         self.assertFalse(runtime.status(self.store)['enabled'])
@@ -167,10 +166,11 @@ class ReviewerRuntimeTests(unittest.TestCase):
 
     def test_process_source_mutation_is_not_accepted(self):
         self.process('mutate')
-        with self.assertRaises(Conflict):
+        with self.assertRaises(ValueError):
             deliver(self.service, self.plan)
         self.assertFalse(runtime.status(self.store)['enabled'])
         self.assertEqual(history(self.store, self.plan), [])
+        self.assertFalse(self.store.path('mutation.txt').exists())
 
     def test_review_process_timeout_retains_logs_without_completion(self):
         self.process('review-timeout', timeout=1)
@@ -184,7 +184,7 @@ class ReviewerRuntimeTests(unittest.TestCase):
         self.host()
         folder = deliver(self.service, self.plan)['handoff']
         self.host()
-        with self.assertRaisesRegex(ValueError, 'changed'):
+        with self.assertRaises(ValueError):
             self.write_note(folder)
         self.assertEqual(history(self.store, self.plan), [])
 

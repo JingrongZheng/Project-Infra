@@ -100,7 +100,7 @@ project-infra deliver PLAN-0001
 project-infra review PLAN-0001 --record .work/reviews/PLAN-0001/<本轮>/NOTE.md
 ```
 
-完整的进程/宿主接入与 JSON 协议见 [质疑者接入指南](docs/reviewer-integration.md)。程序不验证审查者身份或思考质量；独立会话与权限由宿主/适配器落实，不把提示词或普通进程当成操作系统权限隔离。意见记录不自动等于方案通过、对象关闭或主干采用。
+完整的进程/宿主接入与 JSON 协议见 [质疑者接入指南](docs/reviewer-integration.md)。独立会话由宿主/适配器提供；Project Infra 在交接前保存原权限并冻结项目，仅本轮审查输出可写，结束后先恢复权限再记录意见。失败、超时、主程序退出或重新打开工作台均有恢复路径。审查阶段暂停全部项目修改。程序不验证审查者身份或思考质量。意见记录不自动等于方案通过、对象关闭或主干采用。
 
 ## 功能演示
 
@@ -138,7 +138,7 @@ Plan 只有进行中、暂停、已结束三个状态，各列独立滚动。尚
 
 ### Windows 安装版
 
-1. 在 [Releases](https://github.com/JingrongZheng/Project-Infra/releases/latest) 下载 `ProjectInfra-0.3.2-Setup.exe`。
+1. 在 [Releases](https://github.com/JingrongZheng/Project-Infra/releases/latest) 下载 `ProjectInfra-0.4.0-Setup.exe`。
 2. 按中文向导选择安装位置，保留“创建桌面快捷方式”。
 3. 双击桌面的 Project Infra，选择已有项目或一个空文件夹。
 4. 空目录经确认后生成项目骨架，看板自动在系统默认浏览器中打开。
@@ -151,7 +151,7 @@ Plan 只有进行中、暂停、已结束三个状态，各列独立滚动。尚
 
 ### Windows 便携版
 
-下载 `project-infra-0.3.2-windows-portable.zip`，解压后双击 `ProjectInfra.exe`。移动时携带整个文件夹，包括 `_internal`。见 [便携说明](docs/portable-use.md)。
+下载 `project-infra-0.4.0-windows-portable.zip`，解压后双击 `ProjectInfra.exe`。移动时携带整个文件夹，包括 `_internal`。见 [便携说明](docs/portable-use.md)。
 
 ## 项目内容放在哪里？
 

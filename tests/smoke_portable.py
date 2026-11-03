@@ -101,10 +101,33 @@ try:
     capability_data = json.loads((project / '.work/reviewer/runtime.json').read_text(encoding='utf-8'))
     assert capability_data['environment'] == data['reviewer_environment'], 'GUI and CLI in the same installation must share environment identity'
     handoff = run([cli, '--root', project, 'review', plan, '--prepare'], cwd=project).strip()
+    try:
+        (project / 'forbidden-review-write.txt').write_text('bad', encoding='utf-8')
+    except PermissionError:
+        pass
+    else:
+        raise AssertionError('Frozen portable program did not protect the project')
     note = project / handoff / 'NOTE.md'
     note.write_text('Reviewer: packaged test fixture, not a real review\n\n## 已核查\nCLI packaging check only.\n\n## 主要疑点\nDoes not establish production method validity.\n', encoding='utf-8')
     run([cli, '--root', project, 'review', plan, '--record', str(note.relative_to(project))], cwd=project)
     assert 'packaged test fixture' in (project / '.project/plans' / (plan + '.md')).read_text(encoding='utf-8')
+    (project / '.work/restored-write.txt').write_text('writing restored', encoding='utf-8')
+    # The packaged detached watchdog must work after the prepare CLI has exited.
+    capability = json.loads(run([cli, '--root', project, 'reviewer', 'probe', '--timeout', '2'], cwd=project))
+    request = json.loads((project / capability['request']).read_text(encoding='utf-8'))
+    response = project / capability['response']
+    response.write_text(json.dumps({'nonce': request['nonce'], 'independent': True, 'session': 'packaged-timeout-fixture'}), encoding='utf-8')
+    run([cli, '--root', project, 'reviewer', 'accept', '--response', str(response)], cwd=project)
+    run([cli, '--root', project, 'review', plan, '--prepare'], cwd=project)
+    limit = time.time() + 10
+    while True:
+        try:
+            (project / '.work/watchdog-restored.txt').write_text('detached recovery', encoding='utf-8')
+            break
+        except PermissionError:
+            if time.time() > limit:
+                raise AssertionError('Packaged watchdog did not restore writing after timeout')
+            time.sleep(.1)
 finally:
     server.terminate()
     server.wait(timeout=10)

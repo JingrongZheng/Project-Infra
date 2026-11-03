@@ -25,6 +25,8 @@ class ExecutionWorkflowTests(unittest.TestCase):
         self.addCleanup(self.temp.cleanup)
         self.store = Store(self.temp.name)
         initialize(self.store)
+        from project_infra.review_lock import recover
+        self.addCleanup(recover, self.store, "test-cleanup")
         self.service = Service(self.store)
         self.plan = self.service.create('plan', 'A real pending execution step')
 

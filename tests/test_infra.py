@@ -25,6 +25,8 @@ class Fixture(unittest.TestCase):
         self.addCleanup(self.tmp.cleanup)
         self.store = Store(self.tmp.name)
         initialize(self.store)
+        from project_infra.review_lock import recover
+        self.addCleanup(recover, self.store, "test-cleanup")
         self.service = Service(self.store)
 
     def get(self, ident):

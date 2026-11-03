@@ -10,6 +10,7 @@ from .store import Conflict
 from .validation import kind_of
 from .documents import digest
 from . import reviewer_runtime as runtime
+from . import review_lock
 
 NOTE = '''# Review note
 
@@ -44,7 +45,7 @@ def prepare(service, ident):
         active_file = service.store.path(active_path)
         previous = json.loads(active_file.read_text(encoding='utf-8')) if active_file.exists() else {}
         if (previous.get('runtime_id') == capability['runtime_id'] and previous.get('deadline', 0) > time.time()
-                and not service.store.path(previous['archive']).exists()):
+                and not previous.get('finished') and not service.store.path(previous['archive']).exists()):
             raise Conflict('This delivery already has a pending review; finish it or disable/recheck the reviewer')
         service.store.commit_locked({active_path: json.dumps({'runtime_id': capability['runtime_id'],
             'deadline': deadline, 'archive': f'.project/reviews/{ident}/{folder.name}.md'})},
@@ -54,7 +55,8 @@ def prepare(service, ident):
     folder.mkdir(parents=True)
     (folder / 'context.md').write_text(context + '\n\n# 执行边界\n'
         '这是显式交付检查点。交给未参与本次方案与实现的独立会话（subagent、进程或其他接入方式）；只审查，不提出替代实施方案或修改业务代码。\n'
-        '宿主应将项目源码、知识和记录设为只读，只允许写本交接目录的 NOTE.md 和 checks/ 临时检查产物；这是宿主权限要求，本工具不声称已建立沙箱。\n'
+        'Project Infra 在交接前冻结项目写权限；仅本轮 NOTE.md、运行日志和 checks/ 可写。审查期间执行者暂停全部项目修改。\n'
+        '宿主结束本轮独立会话后再交回意见，程序先恢复原权限、再导入；临时测试产物写 checks/，Git 检查使用 --no-optional-locks。\n'
         '核查适用的真实运行路径、端到端检查、数据泄露与投机完成，短 note 写实际证据及未覆盖范围。\n'
         '自动测试不冒充独立审查，导入 note 不自动关闭对象或采纳设计。\n', encoding='utf-8')
     (folder / 'NOTE.md').write_text(NOTE, encoding='utf-8')
@@ -62,6 +64,12 @@ def prepare(service, ident):
         'fingerprint': fingerprint, 'allowed_write': ['NOTE.md', 'checks/'],
         'runtime_id': capability['runtime_id'], 'deadline': deadline,
         'round': folder.name}, ensure_ascii=False, indent=2), encoding='utf-8')
+    try:
+        review_lock.begin(service.store, folder.relative_to(service.store.root).as_posix(), deadline,
+                          runtime.read(service.store)['mode'])
+    except (OSError, ValueError):
+        runtime.disable(service.store, '项目写保护未能建立，本轮未启动独立审查')
+        raise
     return folder.relative_to(service.store.root).as_posix()
 
 
@@ -73,6 +81,13 @@ def record(service, ident, relative_note):
     manifest = json.loads(note_path.with_name('manifest.json').read_text(encoding='utf-8'))
     if manifest.get('id') != ident or manifest.get('root') != str(service.store.root):
         raise ValueError('Review handoff belongs to a different project or object')
+    review_lock.finish(service.store, manifest['round'])
+    active_path = f'.work/reviewer/active/{ident}.json'
+    active_file = service.store.path(active_path)
+    active = json.loads(active_file.read_text(encoding='utf-8'))
+    active['finished'] = True
+    with service.store.locked():
+        service.store.commit_locked({active_path: json.dumps(active)}, {active_path: digest(active_file.read_bytes())})
     capability = runtime.status(service.store)
     if not capability.get('enabled') or manifest.get('runtime_id') != capability.get('runtime_id'):
         raise ValueError('Review capability is unavailable or changed; prepare a fresh handoff')
@@ -167,5 +182,8 @@ def deliver(service, ident):
         record(service, ident, folder + '/NOTE.md')
         return {'reviewed': True, 'handoff': folder}
     except (ValueError, OSError) as exc:
+        review_lock.recover(service.store, 'process-failed', folder.rsplit('/', 1)[-1])
         runtime.disable(service.store, f'审查执行失败，质疑功能已关闭：{exc}')
         raise
+    finally:
+        review_lock.recover(service.store, 'process-finished', folder.rsplit('/', 1)[-1])

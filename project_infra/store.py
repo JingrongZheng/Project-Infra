@@ -53,6 +53,8 @@ class Store:
 
     @contextmanager
     def locked(self):
+        from .review_lock import assert_writable
+        assert_writable(self)
         with self.mutex:
             lock = self.path('.project/.write.lock')
             lock.parent.mkdir(parents=True, exist_ok=True)
@@ -65,6 +67,7 @@ class Store:
                 os.close(fd)
                 if self.path('.project/transaction.json').exists():
                     raise Conflict('Unfinished transaction; inspect .project/transaction.json')
+                assert_writable(self)
                 yield
             finally:
                 lock.unlink(missing_ok=True)

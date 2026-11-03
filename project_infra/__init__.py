@@ -1,2 +1,2 @@
 """File-backed project context, exploration and delivery tools."""
-__version__ = "0.3.2"
+__version__ = "0.4.0"
