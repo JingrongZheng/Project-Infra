@@ -17,6 +17,7 @@ Issues = "https://github.com/JingrongZheng/Project-Infra/issues"
 
 [project.scripts]
 project-infra = "project_infra.cli:main"
+project-infra-desktop = "project_infra.desktop:main"
 
 [tool.setuptools]
 packages = ["project_infra"]

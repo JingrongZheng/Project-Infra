@@ -6,7 +6,7 @@
 
 Project Infra 是一套面向探索型开发、研究项目和 Vibe Coding 的项目基础设施：让项目自己保存当前设计、探索依据、长期知识与共享实现，支持零背景 Agent 接手，以及低频独立质疑。Markdown / TOML 和源码文件是记录本体，可视化看板只是它们的可编辑投影。
 
-[下载安装包](https://github.com/JingrongZheng/Project-Infra/releases/latest) · [安装说明](docs/install-wizard.md) · [开发与构建](docs/development.md) · [变更日志](CHANGELOG.md) · [版本约定](docs/versioning.md) · [MIT 许可](LICENSE)
+[下载发行包](https://github.com/JingrongZheng/Project-Infra/releases/latest) · [Windows 安装说明](docs/install-wizard.md) · [Ubuntu / 本地安装](docs/local-use.md) · [开发与构建](docs/development.md) · [变更日志](CHANGELOG.md) · [版本约定](docs/versioning.md) · [MIT 许可](LICENSE)
 
 ## 设计
 
@@ -109,6 +109,26 @@ project-infra review PLAN-0001 --record .work/reviews/PLAN-0001/<本轮>/NOTE.md
 
 ## 下载与开始使用
 
+### Ubuntu / Linux
+
+需要 Python 3.11+、`venv` 和浏览器。从源码安装：
+
+```sh
+sudo apt install python3 python3-venv
+git clone https://github.com/JingrongZheng/Project-Infra.git
+cd Project-Infra
+python3 -m venv .venv
+.venv/bin/python -m pip install -e .
+mkdir -p "$HOME/projects/my-project"
+cd "$HOME/projects/my-project"
+"/path/to/Project-Infra/.venv/bin/project-infra" init
+"/path/to/Project-Infra/.venv/bin/project-infra" serve --port 8765
+```
+
+把 `/path/to/Project-Infra` 换成实际克隆路径。浏览器打开 <http://127.0.0.1:8765/>。可选桌面选择器需要额外安装 `python3-tk`，然后运行同一 `.venv/bin` 下的 `project-infra-desktop`。离线本地包、隔离安装脚本和无图形环境说明见[本地安装文档](docs/local-use.md)。
+
+看板、CLI、项目初始化和桌面选择器支持 Ubuntu；独立质疑者的项目写保护当前仍依赖 Windows ACL，在 Ubuntu 会保持禁用并明确记录，不影响其他功能。
+
 ### Windows 安装版
 
 1. 在 [Releases](https://github.com/JingrongZheng/Project-Infra/releases/latest) 下载 `ProjectInfra-1.0.0-Setup.exe`。
@@ -156,7 +176,7 @@ project-infra review PLAN-0001 --record .work/reviews/PLAN-0001/<本轮>/NOTE.md
 
 需要 Python 3.11+：
 
-```powershell
+```sh
 python -m pip install -e .
 project-infra --root '你的项目目录' init
 project-infra --root '你的项目目录' serve --port 8765
@@ -164,7 +184,7 @@ project-infra --root '你的项目目录' serve --port 8765
 
 示例项目可以直接运行：
 
-```powershell
+```sh
 python -m project_infra --root examples/document-qa serve --port 8768
 ```
 

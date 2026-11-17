@@ -24,6 +24,7 @@ bundle = dist / f'project-infra-{__version__}-local.zip'
 with zipfile.ZipFile(bundle, 'w', zipfile.ZIP_DEFLATED) as archive:
     archive.write(wheel, wheel.name)
     archive.write(root / 'scripts/install-local.ps1', 'install-local.ps1')
+    archive.write(root / 'scripts/install-local.sh', 'install-local.sh')
     archive.write(root / 'docs/local-use.md', '使用说明.md')
 checksum = hashlib.sha256(bundle.read_bytes()).hexdigest()
 bundle.with_suffix('.zip.sha256').write_text(checksum + '  ' + bundle.name + '\n', encoding='ascii')

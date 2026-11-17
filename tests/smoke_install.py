@@ -31,15 +31,24 @@ def command(args, cwd=project, success=True):
         raise RuntimeError(result.stdout + result.stderr)
     return result
 
-command(['powershell', '-NoProfile', '-ExecutionPolicy', 'Bypass', '-File',
-         unpacked / 'install-local.ps1', '-Destination', installation, '-Python', sys.executable])
-cli = installation / '.venv/Scripts/project-infra.exe'
-python = installation / '.venv/Scripts/python.exe'
+if os.name == 'nt':
+    command(['powershell', '-NoProfile', '-ExecutionPolicy', 'Bypass', '-File',
+             unpacked / 'install-local.ps1', '-Destination', installation, '-Python', sys.executable])
+    cli = installation / '.venv/Scripts/project-infra.exe'
+    python = installation / '.venv/Scripts/python.exe'
+    wrapper = ['cmd', '/c', installation / 'project-infra.cmd']
+else:
+    command(['sh', unpacked / 'install-local.sh', installation, sys.executable])
+    cli = installation / '.venv/bin/project-infra'
+    python = installation / '.venv/bin/python'
+    wrapper = [installation / 'project-infra']
+    assert (installation / 'project-infra-desktop').is_file()
+    assert (installation / '.venv/bin/project-infra-desktop').is_file()
 assert command([cli, '--version']).stdout.strip() == __version__
 location = command([python, '-c', 'import project_infra; print(project_infra.__file__)']).stdout.strip()
 assert str(installation).casefold() in location.casefold(), location
 # Wrapper works with a Chinese installation path and the caller's current directory.
-command(['cmd', '/c', str(installation / 'project-infra.cmd'), 'init'])
+command([*wrapper, 'init'])
 command([cli, 'validate'])
 assert json.loads(command([cli, 'list', '--json']).stdout) == []
 assert not (project / 'project_infra').exists()

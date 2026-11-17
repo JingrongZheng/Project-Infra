@@ -24,13 +24,13 @@ AGENTS = '''# Agent 入口
 | 启动自检、接入协议与异常处理 | docs/reviewer-integration.md |
 | 程序结构与操作 | README.md |
 | 验证环境、依赖定位及可直接使用的命令 | docs/verification.md |
-| 便携应用的当前命令行位置 | .work/infra-runtime.md（应用打开项目时更新） |
+| 桌面/便携应用的当前命令行位置 | .work/infra-runtime.md（应用打开项目时更新） |
 | 当前停点、等待对象及继续条件 | 对象的 Continuation 小节；临时现场补充见下项 |
 | 尚未结束的现场 | .work/<对象类型>/<ID>/HANDOFF.md |
 
 常用命令（在本工具目录运行，外部项目加 --root 路径）：
 
-便携版不依赖系统 Python：先读 .work/infra-runtime.md，使用应用目录的 project-infra.exe 调用以下同名子命令。仅 Python 安装版可使用下面的 python -m 写法；找不到 Python 模块时不要重新安装，先确认使用的是哪种入口。
+桌面或便携应用先读 .work/infra-runtime.md，使用其中记录的跨平台命令入口调用以下同名子命令。Python 安装版也可使用下面的 python -m 写法；找不到 Python 模块时不要重新安装，先确认使用的是哪种入口。
 
 ```sh
 python -m project_infra reviewer status
@@ -79,12 +79,12 @@ REVIEWER = '''# 质疑者初始化
 STARTER_README = '''# 项目工作台
 
 本目录保存项目自己的设计与探索记录，Project Infra 程序安装在项目之外。
-便携版日常使用：双击应用目录中的 ProjectInfra.exe，选择本目录，自动打开看板。无需执行以下终端命令，也不需要系统 Python。Agent 命令入口见 .work/infra-runtime.md，由应用启动时更新。
+桌面入口会让你选择本目录并自动打开看板；Windows 便携版使用 ProjectInfra.exe，Ubuntu 本地安装使用 project-infra-desktop。Agent 命令入口见 .work/infra-runtime.md，由应用启动时更新。无图形环境可直接使用下面的终端命令。
 先让 Agent 阅读 AGENTS.md，结合你的实际目标填写 PROJECT.md，再按需要建立 Proposal、Plan 和 Experiment。
 方向尚未决定开展时保留 Proposal；创建 Plan 即开始探索。空项目没有演示数据或预设实验。
 Plan 的 Execution plan 保存随探索动态更新的整体 steps，并默认带未完成的“共享实现整理”步骤。执行 Agent 完成后勾选并写“结果：”及具体处理或无需抽取的原因；非放弃 Plan 未完成此项时，程序拒绝交付与结束。普通 Experiment 不重复设置此项。context EXP-编号 会带入所属 Plan 的当前执行计划。
 
-在本目录运行（未激活安装环境时使用安装目录内 project-infra.cmd 的完整路径）：
+在本目录运行（未激活安装环境时使用安装目录内 `project-infra.cmd` 或 `project-infra` 的完整路径）：
 
 ```sh
 project-infra validate
@@ -119,7 +119,7 @@ REVIEWER_INTEGRATION = '''# 质疑者接入与启动自检（v1.0.0）
 
 Project Infra 不包含 Agent。它管理能力握手、交付检查点、项目写保护、异常与多轮意见；实际会话由你已有的工具提供，不限定模型、厂商、subagent 或独立进程。
 
-审查是串行交接：执行者结束本轮写入 → 程序保存原权限并冻结项目 → 独立会话审查 → 程序恢复原权限 → 写回意见 → 执行者继续。审查阶段不允许项目修改。Windows 文件权限提供实际写保护，不使用密码或另建用户。
+审查是串行交接：执行者结束本轮写入 → 程序保存原权限并冻结项目 → 独立会话审查 → 程序恢复原权限 → 写回意见 → 执行者继续。审查阶段不允许项目修改。当前只有 Windows 文件权限提供实际写保护，不使用密码或另建用户；Ubuntu / Linux 会拒绝启用此能力，其他功能不受影响。
 
 ## 启动时：能力自检
 

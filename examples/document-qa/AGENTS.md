@@ -20,13 +20,13 @@
 | 启动自检、接入协议与异常处理 | docs/reviewer-integration.md |
 | 程序结构与操作 | README.md |
 | 验证环境、依赖定位及可直接使用的命令 | docs/verification.md |
-| 便携应用的当前命令行位置 | .work/infra-runtime.md（应用打开项目时更新） |
+| 桌面/便携应用的当前命令行位置 | .work/infra-runtime.md（应用打开项目时更新） |
 | 当前停点、等待对象及继续条件 | 对象的 Continuation 小节；临时现场补充见下项 |
 | 尚未结束的现场 | .work/<对象类型>/<ID>/HANDOFF.md |
 
 常用命令（在本工具目录运行，外部项目加 --root 路径）：
 
-便携版不依赖系统 Python：先读 .work/infra-runtime.md，使用应用目录的 project-infra.exe 调用以下同名子命令。仅 Python 安装版可使用下面的 python -m 写法；找不到 Python 模块时不要重新安装，先确认使用的是哪种入口。
+桌面或便携应用先读 .work/infra-runtime.md，使用其中记录的跨平台命令入口调用以下同名子命令。Python 安装版也可使用下面的 python -m 写法；找不到 Python 模块时不要重新安装，先确认使用的是哪种入口。
 
 ```sh
 python -m project_infra reviewer status

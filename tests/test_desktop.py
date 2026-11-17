@@ -1,5 +1,6 @@
 from pathlib import Path
 import shutil
+import sys
 import tempfile
 import unittest
 from urllib.request import urlopen
@@ -62,7 +63,8 @@ class DesktopTests(unittest.TestCase):
             for name in ['app1', 'app2']:
                 app = base / name
                 app.mkdir()
-                (app / 'project-infra.exe').touch()
+                executable = 'project-infra.exe' if sys.platform == 'win32' else 'project-infra'
+                (app / executable).touch()
                 write_runtime_hint(project, app)
             text = (project / '.work/infra-runtime.md').read_text(encoding='utf-8')
             self.assertIn('app2', text)

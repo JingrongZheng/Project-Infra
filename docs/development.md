@@ -4,7 +4,7 @@
 
 需要 Python 3.11+。在仓库根目录安装命令，然后在一个独立目录初始化项目：
 
-```powershell
+```sh
 python -m pip install -e .
 project-infra --root '你的项目目录' init
 project-infra --root '你的项目目录' serve --port 8765
@@ -37,7 +37,7 @@ project-infra --root '你的项目目录' serve --port 8765
 
 ## 自动检查
 
-```powershell
+```sh
 python -m unittest discover -s tests -q
 node --test tests/test_graph.cjs tests/test_routing.cjs
 ```
@@ -50,7 +50,7 @@ Node 只用于前端开发检查，不是桌面用户的运行依赖。测试会
 
 直接启动示例项目：
 
-```powershell
+```sh
 python -m project_infra --root examples/document-qa serve --port 8768
 node scripts/capture_demo.cjs
 ```
@@ -60,13 +60,19 @@ node scripts/capture_demo.cjs
 
 ## 打包
 
-- Python 离线包：已有 setuptools / wheel 的环境中运行 `python scripts/build_local.py`。
+- Windows / Linux Python 离线包：已有 setuptools / wheel 的环境中运行 `python scripts/build_local.py`；生成的 local.zip 同时包含 `install-local.ps1` 与 `install-local.sh`。
 - Windows 便携版：在 Windows 构建环境安装 PyInstaller，再运行 `python scripts/build_portable.py`。
 - Windows 安装版：先构建便携版，然后运行 `python scripts/build_installer.py --compiler 'Inno Setup目录/ISCC.exe'`。
 
 构建结果在 dist/，不自动发布。运行时的第三方许可在 licenses/ 与 THIRD_PARTY_NOTICES.md；重新选择运行时版本时也应更新对应许可。
 
 安装/迁移回归：
+
+```sh
+python tests/smoke_install.py dist/project-infra-1.0.0-local.zip
+```
+
+Windows 专用便携版和安装器回归：
 
 ```powershell
 python -X utf8 tests/smoke_portable.py dist/project-infra-1.0.0-windows-portable.zip
@@ -77,4 +83,4 @@ python -X utf8 tests/smoke_installer.py 'Inno Setup目录/ISCC.exe'
 
 ## 当前边界
 
-当前桌面安装包针对 Windows x64 构建；尚未在所有干净机器上验证。源码日常服务无第三方 Python 包依赖，原生桌面入口需要 Tk。未实现云同步、多人远程协作、画布拖线编辑；审查接入与调用边界见 reviewer-integration.md。
+Windows 桌面安装包针对 Windows x64 构建；Linux 使用隔离 Python 本地包。源码日常服务无第三方 Python 包依赖，原生桌面入口需要 Tk；无图形 Linux 环境使用 CLI 与浏览器服务。独立审查写保护当前仅支持 Windows ACL，Linux 会拒绝启用该能力。未实现云同步、多人远程协作、画布拖线编辑；审查接入与调用边界见 reviewer-integration.md。

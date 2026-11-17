@@ -1,11 +1,11 @@
 # 项目工作台
 
 本目录保存项目自己的设计与探索记录，Project Infra 程序安装在项目之外。
-便携版日常使用：双击应用目录中的 ProjectInfra.exe，选择本目录，自动打开看板。无需执行以下终端命令，也不需要系统 Python。Agent 命令入口见 .work/infra-runtime.md，由应用启动时更新。
+桌面入口会让你选择本目录并自动打开看板；Windows 便携版使用 ProjectInfra.exe，Ubuntu 本地安装使用 project-infra-desktop。Agent 命令入口见 .work/infra-runtime.md，由应用启动时更新。无图形环境可直接使用下面的终端命令。
 先让 Agent 阅读 AGENTS.md，结合你的实际目标填写 PROJECT.md，再按需要建立 Proposal、Plan 和 Experiment。
 方向尚未决定开展时保留 Proposal；创建 Plan 即开始探索。空项目没有演示数据或预设实验。
 
-在本目录运行（未激活安装环境时使用安装目录内 project-infra.cmd 的完整路径）：
+在本目录运行（未激活安装环境时使用安装目录内 `project-infra.cmd` 或 `project-infra` 的完整路径）：
 
 ```sh
 project-infra validate

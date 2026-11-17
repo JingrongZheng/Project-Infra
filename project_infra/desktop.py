@@ -101,16 +101,24 @@ class ProjectSessions:
 
 
 def write_runtime_hint(project, directory):
-    cli = directory / 'project-infra.exe'
-    if not cli.is_file():
+    candidates = [directory / ('project-infra.exe' if sys.platform == 'win32' else 'project-infra')]
+    scripts = Path(sys.executable).parent
+    candidates.append(scripts / ('project-infra.exe' if sys.platform == 'win32' else 'project-infra'))
+    cli = next((candidate for candidate in candidates if candidate.is_file()), None)
+    if cli is None:
         return
     work = Path(project) / '.work'
     work.mkdir(exist_ok=True)
+    if sys.platform == 'win32':
+        example = "& '" + str(cli).replace("'", "''") + "' --root '" + str(project).replace("'", "''") + "' validate"
+        language = 'powershell'
+    else:
+        import shlex
+        example = f'{shlex.quote(str(cli))} --root {shlex.quote(str(project))} validate'
+        language = 'sh'
     work.joinpath('infra-runtime.md').write_text(
-        '# 本次应用运行入口\n\n由应用启动时更新，移动应用后重新打开项目即可刷新。\n'
-        '无需系统 Python，命令行入口为应用目录的 project-infra.exe。PowerShell 示例：\n\n'
-        '```powershell\n& \'' + str(cli).replace("'", "''") + '\' --root \'' +
-        str(project).replace("'", "''") + '\' validate\n```\n', encoding='utf-8')
+        '# 本次应用运行入口\n\n由应用启动时更新，移动或重装应用后重新打开项目即可刷新。\n'
+        f'当前命令行入口为 `{cli}`。\n\n```{language}\n{example}\n```\n', encoding='utf-8')
 
 
 def main(startup=True, on_ready=None):
