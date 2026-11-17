@@ -6,7 +6,7 @@
 
 Project Infra 是一套面向探索型开发、研究项目和 Vibe Coding 的项目基础设施：让项目自己保存当前设计、探索依据、长期知识与共享实现，支持零背景 Agent 接手，以及低频独立质疑。Markdown / TOML 和源码文件是记录本体，可视化看板只是它们的可编辑投影。
 
-[下载发行包](https://github.com/JingrongZheng/Project-Infra/releases/latest) · [Windows 安装说明](docs/install-wizard.md) · [Ubuntu / 本地安装](docs/local-use.md) · [开发与构建](docs/development.md) · [变更日志](CHANGELOG.md) · [版本约定](docs/versioning.md) · [MIT 许可](LICENSE)
+[下载发行包](https://github.com/JingrongZheng/Project-Infra/releases/latest) · [Windows 安装说明](docs/install-wizard.md) · [Ubuntu 便携版](docs/linux-portable-use.md) · [源码安装](docs/local-use.md) · [开发与构建](docs/development.md) · [变更日志](CHANGELOG.md) · [版本约定](docs/versioning.md) · [MIT 许可](LICENSE)
 
 ## 设计
 
@@ -111,23 +111,17 @@ project-infra review PLAN-0001 --record .work/reviews/PLAN-0001/<本轮>/NOTE.md
 
 ### Ubuntu / Linux
 
-需要 Python 3.11+、`venv` 和浏览器。从源码安装：
+从包含 Linux 便携附件的 Release 下载与 CPU 架构匹配的 `project-infra-<版本>-linux-x86_64-portable.tar.gz`，解压后直接运行：
 
 ```sh
-sudo apt install python3 python3-venv
-git clone https://github.com/JingrongZheng/Project-Infra.git
-cd Project-Infra
-python3 -m venv .venv
-.venv/bin/python -m pip install -e .
-mkdir -p "$HOME/projects/my-project"
-cd "$HOME/projects/my-project"
-"/path/to/Project-Infra/.venv/bin/project-infra" init
-"/path/to/Project-Infra/.venv/bin/project-infra" serve --port 8765
+tar -xzf project-infra-*-linux-x86_64-portable.tar.gz
+cd ProjectInfra
+./ProjectInfra
 ```
 
-把 `/path/to/Project-Infra` 换成实际克隆路径。浏览器打开 <http://127.0.0.1:8765/>。可选桌面选择器需要额外安装 `python3-tk`，然后运行同一 `.venv/bin` 下的 `project-infra-desktop`。离线本地包、隔离安装脚本和无图形环境说明见[本地安装文档](docs/local-use.md)。
+包内已经包含 Python 运行时，不需要安装 Python、venv、pip 或 Python 依赖。桌面程序负责选择项目并打开浏览器；服务器或 SSH 环境可以直接运行同目录的 `./project-infra`。完整步骤见 [Ubuntu / Linux 自包含便携版说明](docs/linux-portable-use.md)，开发者源码安装见[本地安装文档](docs/local-use.md)。
 
-看板、CLI、项目初始化和桌面选择器支持 Ubuntu；独立质疑者的项目写保护当前仍依赖 Windows ACL，在 Ubuntu 会保持禁用并明确记录，不影响其他功能。
+看板、CLI、项目初始化和桌面选择器支持 Ubuntu；独立质疑者的项目写保护当前仍依赖 Windows ACL，在 Ubuntu 会保持禁用并明确记录，不影响其他功能。官方 x86_64 包以 Ubuntu 22.04 为最低构建基线，适用于 Ubuntu 22.04 及更新兼容版本。
 
 ### Windows 安装版
 

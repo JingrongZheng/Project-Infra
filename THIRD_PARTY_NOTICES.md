@@ -2,9 +2,9 @@
 
 Project Infra's own source code and PI vector mark are provided under the root MIT LICENSE. Third-party components retain their original licenses; the MIT license does not replace them.
 
-## Windows runtime distribution
+## Bundled Python runtime distributions
 
-The current Windows bundle includes CPython 3.12.7 and its runtime libraries. License texts copied from the build runtime are retained in licenses/:
+The Windows and Linux portable bundles include the CPython runtime used by their respective build environments. The current Windows release uses CPython 3.12.7. Each release builder must verify the Linux build's Python and dynamically collected library versions before publishing. Retained license texts include:
 
 | Component | License text |
 |---|---|
@@ -13,11 +13,12 @@ The current Windows bundle includes CPython 3.12.7 and its runtime libraries. Li
 | Tcl / Tk | licenses/Tcl-Tk.txt |
 | OpenSSL | licenses/OpenSSL.txt |
 | libffi | licenses/libffi.txt |
+| mpdecimal | licenses/mpdecimal.txt |
 | bzip2 | licenses/bzip2.txt |
 | XZ / liblzma | licenses/xz.txt |
 | zlib | licenses/zlib.txt |
 
-Microsoft runtime DLLs originate from the build runtime's Windows redistributable components and retain their applicable Microsoft terms. Dependency versions and notices must be reviewed when changing the build environment.
+Microsoft runtime DLLs originate from the Windows build runtime's redistributable components and retain their applicable Microsoft terms. The Linux bundle intentionally uses the target system's X11 client libraries and libuuid instead of redistributing them; these are part of the documented base-system boundary. Dependency versions, collected binaries and notices must be reviewed when changing either build environment.
 
 ## Installer and localization
 

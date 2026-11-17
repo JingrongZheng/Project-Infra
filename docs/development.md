@@ -61,7 +61,7 @@ node scripts/capture_demo.cjs
 ## 打包
 
 - Windows / Linux Python 离线包：已有 setuptools / wheel 的环境中运行 `python scripts/build_local.py`；生成的 local.zip 同时包含 `install-local.ps1` 与 `install-local.sh`。
-- Windows 便携版：在 Windows 构建环境安装 PyInstaller，再运行 `python scripts/build_portable.py`。
+- Windows / Linux 自包含便携版：在目标操作系统与 CPU 架构的隔离构建环境安装 PyInstaller，再运行 `python scripts/build_portable.py`。Windows 生成 ZIP，Linux 生成保留执行权限的 `tar.gz`；两者都包含 Python 运行时，不能跨系统构建。
 - Windows 安装版：先构建便携版，然后运行 `python scripts/build_installer.py --compiler 'Inno Setup目录/ISCC.exe'`。
 
 构建结果在 dist/，不自动发布。运行时的第三方许可在 licenses/ 与 THIRD_PARTY_NOTICES.md；重新选择运行时版本时也应更新对应许可。
@@ -70,6 +70,12 @@ node scripts/capture_demo.cjs
 
 ```sh
 python tests/smoke_install.py dist/project-infra-1.0.0-local.zip
+```
+
+Linux 自包含包回归（应在构建包的 Linux 环境运行）：
+
+```sh
+python tests/smoke_linux_portable.py dist/project-infra-1.0.0-linux-x86_64-portable.tar.gz
 ```
 
 Windows 专用便携版和安装器回归：
@@ -83,4 +89,4 @@ python -X utf8 tests/smoke_installer.py 'Inno Setup目录/ISCC.exe'
 
 ## 当前边界
 
-Windows 桌面安装包针对 Windows x64 构建；Linux 使用隔离 Python 本地包。源码日常服务无第三方 Python 包依赖，原生桌面入口需要 Tk；无图形 Linux 环境使用 CLI 与浏览器服务。独立审查写保护当前仅支持 Windows ACL，Linux 会拒绝启用该能力。未实现云同步、多人远程协作、画布拖线编辑；审查接入与调用边界见 reviewer-integration.md。
+Windows 与 Linux 自包含包都带 Python 运行时；Linux 包仍依赖目标系统内核、glibc 和基础图形库，应在支持范围内最旧的 Ubuntu 上构建。源码日常服务无第三方 Python 包依赖；无图形 Linux 环境使用 CLI 与浏览器服务。独立审查写保护当前仅支持 Windows ACL，Linux 会拒绝启用该能力。未实现云同步、多人远程协作、画布拖线编辑；审查接入与调用边界见 reviewer-integration.md。

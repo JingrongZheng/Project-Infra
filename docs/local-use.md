@@ -1,10 +1,12 @@
-# 本地安装与空白项目实验
+# Python / 源码安装与空白项目实验
 
-本地包支持 Windows 和 Ubuntu / Linux。安装脚本只在指定目录创建独立 Python 环境与命令入口，不修改 `PATH` 或系统 Python，也不访问包索引。需要 Python 3.11 或更新版本。
+普通 Ubuntu 用户应优先使用[自包含 Linux 便携版](linux-portable-use.md)：它自带 Python，解压即可运行。本页保留面向开发者、源码调试和自定义 Python 环境的安装方式，需要 Python 3.11 或更新版本。
+
+本地 wheel 包支持 Windows 和 Ubuntu / Linux。安装脚本只在指定目录创建独立 Python 环境与命令入口，不修改 `PATH` 或系统 Python，也不访问包索引。
 
 如果希望在 Windows 直接双击、无需系统 Python，使用 [Windows 便携应用](portable-use.md)。
 
-本地 ZIP 由维护者运行 `python scripts/build_local.py` 生成；Release 附件只有在对应版本重新构建并上传后才包含新增的 Linux 脚本。直接使用 GitHub 当前源码时，也可按 README 的源码安装步骤运行。
+本地 ZIP 由维护者运行 `python scripts/build_local.py` 生成；它与自带 Python 的便携包不同，适合已经管理 Python 环境的开发者。
 
 ## Ubuntu / Linux 准备
 
@@ -103,6 +105,6 @@ python3 -m venv '/path/to/install/.venv'
 
 Windows 中对应入口位于 `.venv\Scripts\project-infra.exe`。激活虚拟环境后，两端均可直接使用 `project-infra` 命令。
 
-## Ubuntu 当前边界
+## Python 安装版的 Ubuntu 边界
 
 看板、CLI、项目初始化和本地桌面选择器支持 Ubuntu。独立质疑者的项目级写保护目前依赖 Windows ACL，因此 Ubuntu 上 `reviewer probe/check` 会明确拒绝启用；其他功能可以继续使用，并应以 `reviewer disable --reason "Ubuntu 当前不支持审查写保护"` 记录本次降级。不要把未执行独立审查写成审查通过。

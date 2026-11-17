@@ -5,6 +5,8 @@ import hashlib
 def source_digest(root):
     files = [root / 'LICENSE', root / 'THIRD_PARTY_NOTICES.md',
              root / 'scripts/desktop_entry.py', root / 'scripts/cli_entry.py']
+    files += [path for path in (root / 'docs/portable-use.md', root / 'docs/linux-portable-use.md')
+              if path.is_file()]
     files += [p for p in (root / 'project_infra').rglob('*') if p.is_file()
               and '__pycache__' not in p.parts and p.suffix in ('.py', '.js', '.css', '.html', '.svg', '.ico', '.png')]
     files += [p for p in (root / 'licenses').rglob('*') if p.is_file()]

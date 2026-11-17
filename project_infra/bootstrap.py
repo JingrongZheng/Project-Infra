@@ -79,7 +79,7 @@ REVIEWER = '''# 质疑者初始化
 STARTER_README = '''# 项目工作台
 
 本目录保存项目自己的设计与探索记录，Project Infra 程序安装在项目之外。
-桌面入口会让你选择本目录并自动打开看板；Windows 便携版使用 ProjectInfra.exe，Ubuntu 本地安装使用 project-infra-desktop。Agent 命令入口见 .work/infra-runtime.md，由应用启动时更新。无图形环境可直接使用下面的终端命令。
+桌面入口会让你选择本目录并自动打开看板；Windows 便携版使用 ProjectInfra.exe，Ubuntu / Linux 自包含版使用 ProjectInfra。Agent 命令入口见 .work/infra-runtime.md，由应用启动时更新。无图形环境可直接使用下面的终端命令。
 先让 Agent 阅读 AGENTS.md，结合你的实际目标填写 PROJECT.md，再按需要建立 Proposal、Plan 和 Experiment。
 方向尚未决定开展时保留 Proposal；创建 Plan 即开始探索。空项目没有演示数据或预设实验。
 Plan 的 Execution plan 保存随探索动态更新的整体 steps，并默认带未完成的“共享实现整理”步骤。执行 Agent 完成后勾选并写“结果：”及具体处理或无需抽取的原因；非放弃 Plan 未完成此项时，程序拒绝交付与结束。普通 Experiment 不重复设置此项。context EXP-编号 会带入所属 Plan 的当前执行计划。

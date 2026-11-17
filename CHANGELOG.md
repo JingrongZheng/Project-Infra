@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- 新增真正自带 Python 运行时的 Ubuntu / Linux 便携包构建：解压后直接运行桌面程序或配套 CLI，不要求用户安装 Python、venv 或 pip；Linux 使用保留执行权限的 `tar.gz` 并标明 CPU 架构。
+- 新增 Linux 冻结包回归，清空 Python 相关环境和 PATH 后验证搬移、中文/空格路径、Tk 桌面入口、本机服务及前端资源。
 - 新增 Ubuntu / Linux 离线安装脚本、隔离环境命令包装器和可选 Tk 桌面入口；本地发行包同时包含 PowerShell 与 POSIX 安装方式。
 - 桌面应用写入的 Agent 命令提示会按当前平台选择可执行文件和 shell 语法，不再固定为 Windows `.exe`。
 - 本地安装回归测试可在 Windows 与 Linux 上实际安装、初始化项目、启动服务并验证页面资源和写回。
