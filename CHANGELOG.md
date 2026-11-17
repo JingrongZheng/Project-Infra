@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 1.1.0
 
 - 新增真正自带 Python 运行时的 Ubuntu / Linux 便携包构建：解压后直接运行桌面程序或配套 CLI，不要求用户安装 Python、venv 或 pip；Linux 使用保留执行权限的 `tar.gz` 并标明 CPU 架构。
 - 新增 Linux 冻结包回归，清空 Python 相关环境和 PATH 后验证搬移、中文/空格路径、Tk 桌面入口、本机服务及前端资源。

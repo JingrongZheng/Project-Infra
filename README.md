@@ -125,7 +125,7 @@ cd ProjectInfra
 
 ### Windows 安装版
 
-1. 在 [Releases](https://github.com/JingrongZheng/Project-Infra/releases/latest) 下载 `ProjectInfra-1.0.0-Setup.exe`。
+1. 在 [Releases](https://github.com/JingrongZheng/Project-Infra/releases) 找到提供 Windows 安装器的版本，下载 `ProjectInfra-<版本>-Setup.exe`。
 2. 按中文向导选择安装位置，保留“创建桌面快捷方式”。
 3. 双击桌面的 Project Infra，选择已有项目或一个空文件夹。
 4. 空目录经确认后生成项目骨架，看板自动在系统默认浏览器中打开。

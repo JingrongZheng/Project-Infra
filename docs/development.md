@@ -75,7 +75,7 @@ python tests/smoke_install.py dist/project-infra-1.0.0-local.zip
 Linux 自包含包回归（应在构建包的 Linux 环境运行）：
 
 ```sh
-python tests/smoke_linux_portable.py dist/project-infra-1.0.0-linux-x86_64-portable.tar.gz
+python tests/smoke_linux_portable.py dist/project-infra-1.1.0-linux-x86_64-portable.tar.gz
 ```
 
 Windows 专用便携版和安装器回归：
