@@ -160,6 +160,8 @@ cd ProjectInfra
 
 ## 零背景 Agent 如何接手？
 
+Codex 用户可以将 `skills/project-infra` 放到用户 Skill 目录（如 `~/.agents/skills/`），再用 `$project-infra` 接手任意已初始化的 Project Infra 项目。新项目的 `AGENTS.md` 提供项目导航和本地 CLI 定位说明。
+
 把项目目录和实际工作目标交给 Agent，让它先读 `AGENTS.md`，再沿设计主干、knowledge/index.md、共享代码索引以及 Plan / Experiment 按需深入。命令行 `context` 可汇集相关脉络和接续说明；未完成对象可用简短 `Continuation` 写清已完成内容、等待对象及继续条件。
 
 安装版会在打开项目时更新 `.work/infra-runtime.md`，供 Agent 定位配套命令行入口。Agent 先做当前环境的能力自检；只有显式交付检查点才调用已接入的独立质疑者。自动测试、用户验收与独立审查分开记录。

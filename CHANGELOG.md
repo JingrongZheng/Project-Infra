@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.2.0
+
+- 新增可跨项目使用的 Project Infra Skill，集中说明 CLI 接手、更新和校验流程。
+- 精简新项目的 AGENTS.md，保留项目导航与约定入口。
+
 ## 1.1.0
 
 - 新增真正自带 Python 运行时的 Ubuntu / Linux 便携包构建：解压后直接运行桌面程序或配套 CLI，不要求用户安装 Python、venv 或 pip；Linux 使用保留执行权限的 `tar.gz` 并标明 CPU 架构。
